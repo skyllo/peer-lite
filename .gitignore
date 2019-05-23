@@ -1,0 +1,9 @@
+node_modules/
+package-lock.json
+.idea
+*.iml
+*.log
+.DS_Store
+.vscode
+dist
+example

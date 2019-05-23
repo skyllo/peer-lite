@@ -1,0 +1,67 @@
+{
+  "name": "peer-lite",
+  "description": "Lightweight WebRTC library that supports video, audio and data channels",
+  "version": "1.0.0",
+  "license": "MIT",
+  "keywords": [
+    "audio",
+    "p2p",
+    "peer",
+    "peer lite",
+    "peer-to-peer",
+    "stream",
+    "video",
+    "voice",
+    "webrtc",
+    "webrtc stream"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.es.js",
+  "types": "./dist/types/index.d.ts",
+  "scripts": {
+    "prebuild": "rimraf -rf dist/*",
+    "build": "rollup -c build/rollup.config.js",
+    "test": "jest",
+    "testw": "jest --watchAll",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "onfire.js": "^2.0.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.4",
+    "@babel/preset-env": "^7.4.4",
+    "@babel/preset-typescript": "^7.3.3",
+    "@babel/register": "^7.4.4",
+    "@types/expect-puppeteer": "^3.3.1",
+    "@types/jest": "^24.0.13",
+    "@types/jest-environment-puppeteer": "^4.0.0",
+    "@types/puppeteer": "^1.12.4",
+    "@types/webrtc": "^0.0.25",
+    "@typescript-eslint/eslint-plugin": "^1.9.0",
+    "@typescript-eslint/parser": "^1.9.0",
+    "eslint": "5.16.0",
+    "eslint-config-airbnb": "17.1.0",
+    "eslint-plugin-import": "^2.17.2",
+    "eslint-plugin-jsx-a11y": "^6.2.1",
+    "eslint-plugin-react": "^7.13.0",
+    "jest": "^24.8.0",
+    "jest-puppeteer": "3.9.1",
+    "puppeteer": "1.11.0",
+    "rimraf": "^2.6.3",
+    "rollup": "^1.12.2",
+    "rollup-plugin-babel": "^4.3.2",
+    "rollup-plugin-commonjs": "^10.0.0",
+    "rollup-plugin-node-resolve": "^5.0.0",
+    "rollup-plugin-terser": "^5.0.0",
+    "rollup-plugin-typescript2": "^0.21.1",
+    "typescript": "^3.5.0-rc"
+  },
+  "jest": {
+    "preset": "jest-puppeteer",
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ]
+  }
+}

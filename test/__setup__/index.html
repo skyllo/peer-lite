@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>PeerLite Test Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    body {
+      padding: 30px;
+    }
+
+    .App {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-column-gap: 20px;
+      max-width: 1000px;
+      height: max-content;
+      margin: 0 auto;
+    }
+
+    .App > * {
+      border: 1px solid black;
+    }
+
+    video {
+      min-height: 200px;
+      max-width: 100%;
+      max-height: 100%;
+      display: inline-block;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div class="App">
+    <div>
+      <video id="video1" autoPlay muted></video>
+    </div>
+    <div>
+      <video id="video2" autoPlay muted></video>
+    </div>
+  </div>
+</body>
+</html>

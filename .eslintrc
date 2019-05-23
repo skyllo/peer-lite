@@ -1,0 +1,36 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "globals": {
+    "page": true,
+    "browser": true,
+    "context": true,
+    "jestPuppeteer": true
+  },
+  "env": {
+    "browser": true,
+    "jest": true,
+    "node": true
+  },
+  "plugins": [
+    "@typescript-eslint",
+    "import"
+  ],
+  "extends": [
+    "plugin:@typescript-eslint/recommended",
+    "airbnb"
+  ],
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".jsx", ".mjs", ".ts", ".tsx"]
+      }
+    }
+  },
+  "rules": {
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/indent": ["error", 2]
+  }
+}

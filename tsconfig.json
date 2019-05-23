@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "target": "esnext",
+    "declaration": true,
+    "declarationDir": "dist/types",
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "stripInternal": true,
+    "outDir": "dist",
+    "lib": ["esnext", "dom"],
+    "typeRoots": ["node_modules/@types"]
+  },
+  "include": [
+    "src/index.ts"
+  ]
+}

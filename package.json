@@ -1,6 +1,6 @@
 {
   "name": "peer-lite",
-  "description": "Lightweight WebRTC library that supports video, audio and data channels",
+  "description": "Lightweight WebRTC browser library that supports video, audio and data channels",
   "version": "1.0.0",
   "license": "MIT",
   "keywords": [
@@ -66,5 +66,5 @@
       "ts",
       "js"
     ]
-  },
+  }
 }

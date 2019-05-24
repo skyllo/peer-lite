@@ -28,6 +28,9 @@
   "dependencies": {
     "onfire.js": "^2.0.1"
   },
+  "peerDependencies": {
+    "regenerator-runtime": "^0.13.2"
+  },
   "devDependencies": {
     "@babel/core": "^7.4.4",
     "@babel/preset-env": "^7.4.4",
@@ -63,5 +66,5 @@
       "ts",
       "js"
     ]
-  }
+  },
 }

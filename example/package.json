@@ -1,0 +1,38 @@
+{
+  "name": "peer-lite-example",
+  "private": true,
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "prestart": "npm run clean",
+    "start": "parcel public/index.html --cert certs/cert.pem --key certs/key.pem",
+    "start:server": "nodemon src/server/index.js --watch src/server",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.5",
+    "@babel/node": "^7.4.5",
+    "@babel/plugin-proposal-class-properties": "^7.4.4",
+    "@babel/preset-env": "^7.4.5",
+    "@babel/preset-react": "^7.0.0",
+    "@types/react-router-dom": "^4.3.3",
+    "cross-env": "^5.2.0",
+    "nodemon": "^1.19.1",
+    "parcel-bundler": "^1.12.3",
+    "rimraf": "^2.6.3",
+    "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "compression": "^1.7.4",
+    "express": "^4.17.1",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-hot-loader": "^4.8.8",
+    "react-router-dom": "^5.0.0",
+    "regenerator-runtime": "^0.13.2",
+    "socket.io": "^2.2.0",
+    "socket.io-client": "^2.2.0",
+    "styled-components": "^4.2.0",
+    "webrtc-adapter": "^7.2.3"
+  }
+}

@@ -18,6 +18,8 @@ const SignalStyled = styled.div`
     "chat remote local"
     "chat actions actions";
 
+  padding-right: 20px;
+
   .chat {
     grid-area: chat;
   }
@@ -28,7 +30,6 @@ const SignalStyled = styled.div`
 
   .local {
     grid-area: local;
-    padding-right: 20px;
   }
 
   .actions {

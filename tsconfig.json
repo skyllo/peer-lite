@@ -7,6 +7,7 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "stripInternal": true,
+    "esModuleInterop": true,
     "outDir": "dist",
     "lib": ["esnext", "dom"],
     "typeRoots": ["node_modules/@types"],

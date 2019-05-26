@@ -11,7 +11,7 @@ import Peer from '../../../../src/peer';
 const SignalStyled = styled.div`
   display: grid;
   box-sizing: border-box;
-  grid-template-columns: 300px 1fr 1fr;
+  grid-template-columns: 250px 1fr 1fr;
   grid-template-rows: 1fr 40px;
   grid-gap: 20px;
   grid-template-areas:

@@ -4,7 +4,7 @@ import Peer from '../../../../src/peer';
 import { createSocket } from './socket';
 
 export function useCreatePeer(): Peer {
-  const peerRef = useRef();
+  const peerRef = useRef<Peer>();
 
   if (!peerRef.current) {
     peerRef.current = new Peer();
@@ -27,7 +27,7 @@ export function usePeer(peer: Peer, eventName: string, func: Function) {
 }
 
 export function useCreateSocket(): Socket {
-  const socketRef = useRef();
+  const socketRef = useRef<Socket>();
 
   if (!socketRef.current) {
     socketRef.current = createSocket();

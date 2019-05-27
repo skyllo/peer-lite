@@ -39,8 +39,16 @@ peer1.on('streamRemote', (stream) => {
   document.querySelector('#video1').srcObject = stream;
 });
 
+peer1.on('streamLocal', (stream) => {
+  document.querySelector('#video1').srcObject = stream;
+});
+
 peer2.on('streamRemote', (stream) => {
   document.querySelector('#video2').srcObject = stream;
+});
+
+peer2.on('streamLocal', (stream) => {
+  document.querySelector('#video1').srcObject = stream;
 });
 
 (async () => {

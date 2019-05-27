@@ -26,8 +26,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "onfire.js": "^2.0.1",
-    "regenerator-runtime": "^0.13.2"
+    "onfire.js": "^2.0.1"
   },
   "peerDependencies": {},
   "devDependencies": {
@@ -59,6 +58,9 @@
     "rollup-plugin-typescript2": "^0.21.1",
     "typescript": "^3.5.0-rc"
   },
+  "files": [
+    "dist"
+  ],
   "jest": {
     "preset": "jest-puppeteer",
     "moduleFileExtensions": [

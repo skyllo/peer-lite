@@ -11,6 +11,11 @@ Lightweight WebRTC browser library that supports video, audio and data channels 
 * Tested on latest Safari, Firefox, Chrome on MacOS (recommend to use this [shim](https://github.com/webrtc/adapter) for better support)
 * Gathering of ICE candidates is trickle only (most browsers now support trickle ICE, Chrome even has a bug that prevents you from checking support for it https://bugs.chromium.org/p/chromium/issues/detail?id=708484)
 
+# Installation
+```bash
+yarn add peer-lite
+```
+
 # Usage
 Example of two peers connecting to each other locally, see more examples [here](example).
 

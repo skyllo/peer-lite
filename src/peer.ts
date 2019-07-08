@@ -108,7 +108,7 @@ export default class Peer {
         clearTimeout(candidatesId);
         candidates.push(event.candidate);
         // return all candidates if finished gathering
-        if (this.peerConn.iceGatheringState === 'complete') {
+        if (this.peerConn && this.peerConn.iceGatheringState === 'complete') {
           this.emit('onicecandidates', candidates);
         } else {
           // create timeout to return candidates after 200ms
@@ -179,7 +179,7 @@ export default class Peer {
   /** Adds an ICE candidate to the peer connection */
   public async addIceCandidate(candidate: RTCIceCandidate) {
     try {
-      if (this.peerConn) {
+      if (this.peerConn && !this.isClosed()) {
         await this.peerConn.addIceCandidate(candidate);
       }
     } catch (e) {
@@ -300,6 +300,10 @@ export default class Peer {
   /** Returns true if the peer is connected */
   public isConnected(): boolean {
     return this.status() === 'connected';
+  }
+
+  public isClosed(): boolean {
+    return this.status() === 'closed';
   }
 
   public getPeerConnection() {

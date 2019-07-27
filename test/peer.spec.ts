@@ -170,5 +170,5 @@ it('should enable and disable tracks correctly', async () => {
     await connectPeers(peer1, peer2, stream);
   }));
 
-  expect(actual).toEqual([true, false, true, true, false, true]);
+  expect(actual).toEqual([true, false, true]);
 });

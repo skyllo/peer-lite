@@ -100,6 +100,12 @@ export default class Peer {
     const candidates = [];
     let candidatesId = null;
 
+    function clearBatchedCandidates() {
+      clearTimeout(candidatesId);
+      candidates.length = 0;
+      candidatesId = null;
+    }
+
     this.peerConn.onicecandidate = async (event) => {
       if (!event || !event.candidate) return;
       // if batching candidates then setup timeouts
@@ -115,8 +121,7 @@ export default class Peer {
           candidatesId = setTimeout(() => {
             if (candidates.length) {
               this.emit('onicecandidates', candidates);
-              candidates.length = 0;
-              candidatesId = null;
+              clearBatchedCandidates();
             }
           }, this.options.batchCandidatesTimeout);
         }
@@ -138,6 +143,7 @@ export default class Peer {
         case 'closed':
         case 'failed':
         case 'disconnected': {
+          clearBatchedCandidates();
           this.hangup();
           break;
         }

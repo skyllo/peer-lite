@@ -22,10 +22,6 @@ beforeAll(async () => {
   await page.evaluate(code);
   // add test utils functions to page
   await page.addScriptTag({ content: `${connectPeers} ${getPeer} ${handshake}` });
-  // add error listener
-  page.on('error', (err) => {
-    console.log(err);
-  });
   // add page error listener
   page.on('pageerror', (err) => {
     console.log(err);

@@ -261,6 +261,7 @@ export default class Peer {
   /** Sends data to another peer using a RTCDataChannel */
   public send(data: string | Blob | ArrayBuffer | ArrayBufferView): boolean {
     if (this.dataChannel && this.dataChannel.readyState === 'open' && data) {
+      // @ts-ignore
       this.dataChannel.send(data);
       this.emit('data', { data, source: 'outgoing' });
       return true;

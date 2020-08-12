@@ -32,7 +32,7 @@ beforeAll(async () => {
   });
   // add console log listener
   page.on('console', (msg) => {
-    console.log(msg.args().map(i => i.toString().replace('JSHandle:', '')).join(' '));
+    console.log(msg.args().map((i) => i.toString().replace('JSHandle:', '')).join(' '));
   });
 }, 5000);
 
@@ -152,7 +152,7 @@ it('should enable and disable tracks correctly', async () => {
     const stream = await window.Peer.getUserMedia();
 
     function isTracksEnabled() {
-      return peer2.getStreamLocal().getTracks().some(track => track.enabled);
+      return peer2.getStreamLocal().getTracks().some((track) => track.enabled);
     }
 
     const result = [];

@@ -1,6 +1,9 @@
 module.exports = {
-  launch: {
+  browsers: ['chromium', 'firefox'],
+  contextOptions: {
     ignoreHTTPSErrors: true,
+  },
+  launchOptions: {
     headless: true,
     args: [
       '--use-fake-ui-for-media-stream', // avoids the need to grant camera/microphone permissions
@@ -8,8 +11,11 @@ module.exports = {
       '--no-sandbox', // disable Chrome's sandbox as we trust the content
       '--disable-setuid-sandbox', // disable Linux SUID sandbox
     ],
+    firefoxUserPrefs: {
+      'media.navigator.streams.fake': true, // avoids the need to grant camera/microphone permissions
+    },
   },
-  server: {
+  serverOptions: {
     command: 'node test/__setup__/server.js',
     port: 3077,
   },

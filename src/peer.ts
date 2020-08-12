@@ -34,7 +34,7 @@ export default class Peer {
     answerOptions: {},
     channelName: randomHash(),
     channelOptions: {},
-    sdpTransform: sdp => sdp,
+    sdpTransform: (sdp) => sdp,
   };
 
   /** Creates a Peer instance */
@@ -50,7 +50,7 @@ export default class Peer {
         this.removeTracks(true, true);
       }
       // add stream tracks
-      stream.getTracks().forEach(track => this.addTrack(track));
+      stream.getTracks().forEach((track) => this.addTrack(track));
       return this.streamLocal;
     } catch (e) {
       this.error('Failed to set local stream', e);
@@ -94,7 +94,8 @@ export default class Peer {
     // create peer connection
     this.peerConn = new RTCPeerConnection(this.options.config);
     // add local stream to peer connection
-    this.streamLocal.getTracks().forEach(track => this.peerConn.addTrack(track, this.streamLocal));
+    this.streamLocal.getTracks()
+      .forEach((track) => this.peerConn.addTrack(track, this.streamLocal));
 
     // setup peer connection events
     const candidates = [];

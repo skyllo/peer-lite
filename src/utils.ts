@@ -28,7 +28,7 @@ function removeTrack(stream: MediaStream, track: MediaStreamTrack) {
 
 export function removeTracks(stream: MediaStream, video: boolean, audio: boolean) {
   const tracks = getTracks(stream, video, audio);
-  tracks.forEach(track => removeTrack(stream, track));
+  tracks.forEach((track) => removeTrack(stream, track));
 }
 
 export function removeTracksFromPeer(peerConn: RTCPeerConnection, video: boolean, audio: boolean) {

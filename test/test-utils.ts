@@ -20,12 +20,12 @@ export async function handshake(peer1: Peer, peer2: Peer) {
 
 export async function connectPeers(peer1: Peer, peer2: Peer, stream: MediaStream) {
   peer1.on('onicecandidates', async (candidates) => {
-    const promises = candidates.map(async candidate => peer2.addIceCandidate(candidate));
+    const promises = candidates.map(async (candidate) => peer2.addIceCandidate(candidate));
     await Promise.all(promises);
   });
 
   peer2.on('onicecandidates', async (candidates) => {
-    const promises = candidates.map(async candidate => peer1.addIceCandidate(candidate));
+    const promises = candidates.map(async (candidate) => peer1.addIceCandidate(candidate));
     await Promise.all(promises);
   });
 

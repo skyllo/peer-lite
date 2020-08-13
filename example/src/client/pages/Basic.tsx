@@ -30,12 +30,12 @@ export default function Basic() {
   const peer2 = useCreatePeer();
 
   usePeer(peer1, 'onicecandidates', async (candidates) => {
-    const promises = candidates.map(async candidate => peer2.addIceCandidate(candidate));
+    const promises = candidates.map(async (candidate) => peer2.addIceCandidate(candidate));
     await Promise.all(promises);
   });
 
   usePeer(peer2, 'onicecandidates', async (candidates) => {
-    const promises = candidates.map(async candidate => peer1.addIceCandidate(candidate));
+    const promises = candidates.map(async (candidate) => peer1.addIceCandidate(candidate));
     await Promise.all(promises);
   });
 

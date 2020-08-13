@@ -35,12 +35,12 @@ const ChatMessagesStyled = styled.div`
 interface Props {
   className?: string;
   peer: Peer;
-  socket: Socket;
+  socket: typeof Socket;
 }
 
 export default function ChatMessages(props: Props) {
   const { className, peer, socket } = props;
-  const myRef = useRef();
+  const myRef = useRef<HTMLDivElement>();
   const [messages, dispatchMessage] = useReducer((state, action) => {
     switch (action.type) {
       case 'add': return [...state, action.message];
@@ -94,7 +94,7 @@ export default function ChatMessages(props: Props) {
     <ChatMessagesStyled className={className} ref={myRef}>
       <h2>Messages</h2>
 
-      {messages.map(msg => (
+      {messages.map((msg) => (
         <div
           className={`message message--${msg.from}`}
           key={msg.time}

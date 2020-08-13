@@ -10,15 +10,15 @@ import Signal from './pages/Signal';
 const AppStyled = styled.div`
   display: flex;
   position: relative;
-  max-width: 80%;
-  max-height: 100%;
+  max-width: 85%;
+  max-height: 85%;
   margin: auto;
   flex-basis: 576px;
   width: 100%;
 
   .menu {
-    min-width: 200px;
-    padding: 0 20px;
+    padding: 0 25px;
+    white-space: nowrap;
   }
 
   .content {

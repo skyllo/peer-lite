@@ -10,29 +10,31 @@
     "clean": "rimraf dist"
   },
   "devDependencies": {
-    "@babel/core": "^7.4.5",
-    "@babel/node": "^7.4.5",
-    "@babel/plugin-proposal-class-properties": "^7.4.4",
-    "@babel/preset-env": "^7.4.5",
-    "@babel/preset-react": "^7.0.0",
-    "@types/react-router-dom": "^4.3.3",
-    "cross-env": "^5.2.0",
-    "nodemon": "^1.19.1",
-    "parcel-bundler": "^1.12.3",
-    "rimraf": "^2.6.3",
-    "typescript": "^3.4.5"
+    "@babel/core": "^7.11.1",
+    "@babel/node": "^7.10.5",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/preset-env": "^7.11.0",
+    "@babel/preset-react": "^7.10.4",
+    "@types/react-router-dom": "^5.1.5",
+    "@types/socket.io-client": "^1.4.33",
+    "@types/styled-components": "^5.1.2",
+    "cross-env": "^7.0.2",
+    "nodemon": "^2.0.4",
+    "parcel-bundler": "^1.12.4",
+    "rimraf": "^3.0.2",
+    "typescript": "^3.9.7"
   },
   "dependencies": {
     "compression": "^1.7.4",
     "express": "^4.17.1",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
-    "react-hot-loader": "^4.8.8",
-    "react-router-dom": "^5.0.0",
-    "regenerator-runtime": "^0.13.2",
-    "socket.io": "^2.2.0",
-    "socket.io-client": "^2.2.0",
-    "styled-components": "^4.2.0",
-    "webrtc-adapter": "^7.2.3"
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-hot-loader": "^4.12.21",
+    "react-router-dom": "^5.2.0",
+    "regenerator-runtime": "^0.13.7",
+    "socket.io": "^2.3.0",
+    "socket.io-client": "^2.3.0",
+    "styled-components": "^5.1.1",
+    "webrtc-adapter": "^7.7.0"
   }
 }

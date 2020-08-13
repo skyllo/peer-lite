@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import { Socket } from 'socket.io-client';
-import { usePeer } from '../utils/hooks';
 import Peer from '../../../../src/peer';
 
 const CamActionsStyled = styled.div`
@@ -19,21 +18,11 @@ const CamActionsStyled = styled.div`
 interface Props {
   className?: string;
   peer: Peer;
-  socket: Socket;
+  socket: typeof Socket;
 }
 
 export default function CamActions(props: Props) {
   const { className, peer, socket } = props;
-  const [connected, setConnected] = useState(false);
-
-  // peer handlers
-  usePeer(peer, 'connected', () => {
-    setConnected(true);
-  });
-
-  usePeer(peer, 'disconnected', () => {
-    setConnected(false);
-  });
 
   async function call() {
     // create offer
@@ -48,8 +37,8 @@ export default function CamActions(props: Props) {
 
   return (
     <CamActionsStyled className={className}>
-      <button className="button" type="danger" onClick={hangup}>Hang Up</button>
-      <button className="button" type="primary" onClick={call}>Call</button>
+      <button className="button" type="button" onClick={hangup}>Hang Up</button>
+      <button className="button" type="button" onClick={call}>Call</button>
     </CamActionsStyled>
   );
 }

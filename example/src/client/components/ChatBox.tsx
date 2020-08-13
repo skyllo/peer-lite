@@ -39,7 +39,7 @@ const ChatBoxStyled = styled.div`
 interface Props {
   className?: string;
   peer: Peer;
-  socket: Socket;
+  socket: typeof Socket;
 }
 
 export default function ChatBox(props: Props) {

@@ -1,5 +1,5 @@
 module.exports = {
-  browsers: ['chromium', 'firefox'],
+  browsers: ['chromium'],
   contextOptions: {
     ignoreHTTPSErrors: true,
   },

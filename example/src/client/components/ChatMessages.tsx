@@ -75,13 +75,14 @@ export default function ChatMessages(props: Props) {
 
   usePeer(peer, 'connected', () => {
     addMessage('Connected!', 'you');
+    peer.getDataChannel('messages');
   });
 
   usePeer(peer, 'disconnected', () => {
     addMessage('Disconnected.', 'you');
   });
 
-  usePeer(peer, 'data', ({ data, source }) => {
+  usePeer(peer, 'channelData', ({ data, source }) => {
     const clazz = source === 'outgoing' ? 'you' : 'partner';
     addMessage(data, clazz);
   });

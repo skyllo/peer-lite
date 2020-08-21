@@ -1,11 +1,13 @@
+/* eslint-disable no-param-reassign */
 import Emitter from 'onfire.js';
 import {
-  getDefaultCamConstraints, randomHash, removeTracks, removeTracksFromPeer, setTracksEnabled,
+  getDefaultCamConstraints, removeTracks, removeTracksFromPeer, setTracksEnabled,
 } from './utils';
 
-interface Options {
+export interface PeerLiteOptions {
   batchCandidates?: boolean;
   batchCandidatesTimeout?: number;
+  enableDataChannels?: boolean;
   config?: RTCConfiguration;
   constraints?: MediaStreamConstraints;
   offerOptions?: RTCOfferOptions;
@@ -20,25 +22,26 @@ export default class Peer {
 
   private readonly streamLocal: MediaStream = new MediaStream();
 
-  private dataChannel: RTCDataChannel;
+  private readonly channels = new Map<string, RTCDataChannel>();
 
   private readonly emitter = new Emitter();
 
-  private readonly options: Options = {
+  private readonly options: PeerLiteOptions = {
     batchCandidates: true,
     batchCandidatesTimeout: 200,
+    enableDataChannels: true,
     config: {
       iceServers: [{ urls: ['stun:stun.l.google.com:19302'] }],
     },
     offerOptions: {},
     answerOptions: {},
-    channelName: randomHash(),
+    channelName: 'peer-lite',
     channelOptions: {},
     sdpTransform: (sdp) => sdp,
   };
 
   /** Creates a Peer instance */
-  public constructor(options?: Options) {
+  public constructor(options?: PeerLiteOptions) {
     this.options = { ...this.options, ...options };
   }
 
@@ -177,7 +180,12 @@ export default class Peer {
     };
 
     this.peerConn.ondatachannel = (event) => {
-      this.setDataChannel(event.channel);
+      // called for in-band negotiated data channels
+      const { channel } = event;
+      if (this.options.enableDataChannels) {
+        this.channels.set(channel.label, channel);
+        this.addDataChannelEvents(channel);
+      }
     };
 
     return this.peerConn;
@@ -199,10 +207,11 @@ export default class Peer {
     try {
       await this.reset();
 
-      // create data channel
-      const { channelName, channelOptions } = this.options;
-      const dataChannel = this.peerConn.createDataChannel(channelName, channelOptions);
-      this.setDataChannel(dataChannel);
+      const { channelName, channelOptions, enableDataChannels } = this.options;
+      if (enableDataChannels) {
+        // create data channel, needed to add "m=application" to SDP
+        this.getDataChannel(channelName, channelOptions);
+      }
 
       const offerOptions = {
         ...this.options.offerOptions,
@@ -259,23 +268,47 @@ export default class Peer {
   }
 
   /** Sends data to another peer using a RTCDataChannel */
-  public send(data: string | Blob | ArrayBuffer | ArrayBufferView): boolean {
-    if (this.dataChannel && this.dataChannel.readyState === 'open' && data) {
+  public send(
+    data: string | Blob | ArrayBuffer | ArrayBufferView,
+    label: string = this.options.channelName,
+  ): boolean {
+    const channel = this.channels.get(label);
+    if (channel && channel.readyState === 'open' && data) {
       // @ts-ignore
-      this.dataChannel.send(data);
-      this.emit('data', { data, source: 'outgoing' });
+      channel.send(data);
+      this.emit('channelData', { data, source: 'outgoing' });
       return true;
     }
     return false;
   }
 
-  private setDataChannel(dataChannel: RTCDataChannel) {
-    this.dataChannel = dataChannel;
-    // emit data channel
-    this.emit('channel', this.dataChannel);
+  /** Gets existing open data channels or creates new ones */
+  public getDataChannel(
+    label: string = this.options.channelName,
+    opts: RTCDataChannelInit = {},
+  ): RTCDataChannel | null {
+    if (this.isClosed()) {
+      return null;
+    }
+    if (this.channels.has(label)) {
+      return this.channels.get(label);
+    }
+    const channel = this.peerConn.createDataChannel(label, opts);
+    this.channels.set(channel.label, channel);
+    this.addDataChannelEvents(channel);
+    return channel;
+  }
+
+  private addDataChannelEvents(channel: RTCDataChannel) {
     // setup data channel events
-    this.dataChannel.onmessage = (event: MessageEvent) => {
-      this.emit('data', { data: event.data, source: 'incoming' });
+    channel.onopen = this.emit.bind(this, 'channelOpen', { channel });
+    channel.onerror = (error) => this.emit('channelError', { channel, error });
+    channel.onclose = () => {
+      this.channels.delete(channel.label);
+      this.emit('channelClosed', { channel });
+    };
+    channel.onmessage = (event: MessageEvent) => {
+      this.emit('channelData', { channel, data: event.data, source: 'incoming' });
     };
   }
 

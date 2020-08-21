@@ -47,7 +47,7 @@ export default function ChatBox(props: Props) {
   const [messageToSend, setMessageToSend] = useState('');
 
   function send() {
-    const isSuccess = peer.send(messageToSend);
+    const isSuccess = peer.send(messageToSend, 'messages');
     if (isSuccess) {
       setMessageToSend('');
     }

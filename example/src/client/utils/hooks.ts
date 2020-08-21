@@ -26,8 +26,8 @@ export function usePeer(peer: Peer, eventName: string, func: Function) {
   }, []);
 }
 
-export function useCreateSocket(): Socket {
-  const socketRef = useRef<Socket>();
+export function useCreateSocket(): typeof Socket {
+  const socketRef = useRef<typeof Socket>();
 
   if (!socketRef.current) {
     socketRef.current = createSocket();
@@ -40,7 +40,7 @@ export function useCreateSocket(): Socket {
   return socketRef.current;
 }
 
-export function useSocket(socket: Socket, eventName: string, func: Function) {
+export function useSocket(socket: typeof Socket, eventName: string, func: Function) {
   useEffect(() => {
     socket.on(eventName, func);
     return () => {

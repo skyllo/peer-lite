@@ -1,3 +1,4 @@
+/* eslint-disable no-async-promise-executor */
 import { rollup, RollupOptions } from 'rollup';
 import rollupConfig from '../build/rollup.config';
 import * as TestUtils from './test-utils';
@@ -167,4 +168,68 @@ it('should enable and disable tracks correctly', async () => {
   }));
 
   expect(actual).toEqual([true, false, true]);
+});
+
+it('should send data to other peer using data channels', async () => {
+  await page.evaluate(() => new Promise(async (resolve, reject) => {
+    const peer1 = await getPeer({ channelName: 'default' });
+    const peer2 = await getPeer({ channelName: 'default' });
+
+    const stream = await window.Peer.getUserMedia();
+
+    peer1.on('channelData', async ({ data }) => {
+      if (data === 'hello world') {
+        resolve();
+      } else {
+        reject(new Error('did not get correct channel data'));
+      }
+    });
+
+    peer2.on('connected', async () => {
+      setTimeout(async () => {
+        peer2.send('hello world');
+      }, 500);
+    });
+
+    // connect peers together
+    await connectPeers(peer1, peer2, stream);
+  }));
+});
+
+it('should send data to other peer then close using negotiated data channels', async () => {
+  await page.evaluate(() => new Promise(async (resolve, reject) => {
+    const peer1 = await getPeer();
+    const peer2 = await getPeer();
+
+    const stream = await window.Peer.getUserMedia();
+
+    peer1.on('channelData', async ({ data }) => {
+      if (data !== 'hello world') {
+        reject(new Error('did not get correct channel data'));
+      } else {
+        const channel = peer1.getDataChannel();
+        channel.close();
+      }
+    });
+
+    peer1.on('channelClosed', () => {
+      resolve();
+    });
+
+    peer2.on('connected', async () => {
+      peer1.getDataChannel('extraMessages', { negotiated: true, id: 0 });
+      peer2.getDataChannel('extraMessages', { negotiated: true, id: 0 });
+
+      setTimeout(async () => {
+        peer2.send('hello world', 'extraMessages');
+      }, 500);
+    });
+
+    // connect peers together
+    await connectPeers(peer1, peer2, stream);
+
+    peer1.getPeerConnection().addEventListener('datachannel', () => {
+      reject(new Error('got non-negotiated data channel'));
+    });
+  }));
 });

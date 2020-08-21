@@ -53,7 +53,7 @@ export default function Signal() {
 
   useSocket(socket, 'onicecandidates', async ({ candidates }) => {
     console.log('socket <- onicecandidates()', candidates);
-    const promises = candidates.map(async candidate => peer.addIceCandidate(candidate));
+    const promises = candidates.map(async (candidate) => peer.addIceCandidate(candidate));
     await Promise.all(promises);
   });
 

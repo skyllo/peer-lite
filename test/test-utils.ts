@@ -1,11 +1,12 @@
 import Peer from '../src';
+import { PeerLiteOptions } from '../src/peer';
 
 declare global {
   interface Window { Peer }
 }
 
-export async function getPeer() {
-  const peer: Peer = new window.Peer();
+export async function getPeer(options: PeerLiteOptions = {}) {
+  const peer: Peer = new window.Peer(options);
   peer.on('error', (err) => {
     throw new Error(err.toString());
   });

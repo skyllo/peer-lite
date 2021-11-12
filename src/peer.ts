@@ -1,5 +1,6 @@
 /* eslint-disable no-param-reassign */
-import Emitter from 'onfire.js';
+import { EventEmitter } from './emitter';
+import { Arguments, PeerEvents, TypedEmitter } from './types';
 import {
   getDefaultCamConstraints,
   removeTracks,
@@ -27,7 +28,7 @@ export default class Peer {
 
   private readonly channels = new Map<string, RTCDataChannel>();
 
-  private readonly emitter = new Emitter();
+  private readonly emitter = new EventEmitter() as TypedEmitter<PeerEvents>;
 
   private readonly options: PeerLiteOptions = {
     batchCandidates: true,
@@ -279,10 +280,8 @@ export default class Peer {
   ): boolean {
     const channel = this.channels.get(label);
     if (channel && channel.readyState === 'open' && data) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       channel.send(data);
-      this.emit('channelData', { data, source: 'outgoing' });
+      this.emit('channelData', { channel, data, source: 'outgoing' });
       return true;
     }
     return false;
@@ -308,7 +307,7 @@ export default class Peer {
   private addDataChannelEvents(channel: RTCDataChannel) {
     // setup data channel events
     channel.onopen = this.emit.bind(this, 'channelOpen', { channel });
-    channel.onerror = (error) => this.emit('channelError', { channel, error });
+    channel.onerror = (error: RTCErrorEvent) => this.emit('channelError', { channel, error });
     channel.onclose = () => {
       this.channels.delete(channel.label);
       this.emit('channelClosed', { channel });
@@ -366,25 +365,23 @@ export default class Peer {
     return this.peerConn ? this.peerConn.getStats() : null;
   }
 
-  private error(name: string, err: Error) {
-    console.error(`${name} - ${err.toString()}`);
-    this.emit('error', { name, err });
+  private error(name: string, error: Error) {
+    console.error(`${name} - ${error.toString()}`);
+    this.emit('error', { name, error });
   }
 
   // emitter
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  public on(eventName: string, cb: Function) {
-    this.emitter.on(eventName, cb);
+  public on<E extends keyof PeerEvents>(event: E, cb: PeerEvents[E]) {
+    return this.emitter.on(event, cb);
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  public off(eventName: string, cb: Function) {
-    this.emitter.off(eventName, cb);
+  public off<E extends keyof PeerEvents>(event: E, cb: PeerEvents[E]) {
+    return this.emitter.off(event, cb);
   }
 
-  public emit(eventName: string, ...params: any[]) {
-    this.emitter.fire(eventName, ...params);
+  public emit<E extends keyof PeerEvents>(event: E, ...args: Arguments<PeerEvents[E]>) {
+    return this.emitter.emit(event, ...args);
   }
 
   // statics

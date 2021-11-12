@@ -10,7 +10,8 @@
     "esModuleInterop": true,
     "outDir": "dist",
     "lib": ["esnext", "dom"],
-    "types": ["jest", "jest-playwright-preset", "expect-playwright"],
+    "typeRoots": ["node_modules/@types"],
+    "types": ["jest", "jest-playwright-preset", "expect-playwright", "webrtc"],
     "jsx": "react"
   },
   "exclude": [

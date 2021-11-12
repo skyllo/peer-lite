@@ -1,13 +1,14 @@
-import babel from 'rollup-plugin-babel';
-import typescript2 from 'rollup-plugin-typescript2';
-import commonjs from 'rollup-plugin-commonjs';
-import nodeResolve from 'rollup-plugin-node-resolve';
+import { RollupOptions } from 'rollup';
+import babel from '@rollup/plugin-babel';
+import commonjs from '@rollup/plugin-commonjs';
+import nodeResolve from '@rollup/plugin-node-resolve';
+import typescript2 from '@rollup/plugin-typescript';
 import { terser } from 'rollup-plugin-terser';
 import typescript from 'typescript';
 
 const isTest = process.env.NODE_ENV === 'test';
 
-export default {
+const rollupConfig: RollupOptions = {
   input: 'src/index.ts',
   output: [
     {
@@ -26,13 +27,15 @@ export default {
   ],
   plugins: [
     typescript2({
-      clean: true,
       typescript,
-      useTsconfigDeclarationDir: true,
+      tsconfig: './tsconfig.json',
+      include: ['./src/**.*'],
     }),
-    isTest ? [] : babel(),
+    !isTest && babel({ babelHelpers: 'bundled' }),
     nodeResolve(),
     commonjs(),
     terser(),
   ],
 };
+
+export default rollupConfig;

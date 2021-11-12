@@ -3,18 +3,18 @@
     "moduleResolution": "node",
     "target": "esnext",
     "declaration": true,
-    "declarationDir": "dist/types",
+    "declarationDir": "types",
     "skipLibCheck": true,
     "sourceMap": true,
     "stripInternal": true,
     "esModuleInterop": true,
     "outDir": "dist",
     "lib": ["esnext", "dom"],
-    "typeRoots": ["node_modules/@types"],
-    "types": ["jest-playwright-preset", "expect-playwright"],
+    "types": ["jest", "jest-playwright-preset", "expect-playwright"],
     "jsx": "react"
   },
-  "include": [
-    "src/index.ts"
+  "exclude": [
+    "dist",
+    "example"
   ]
 }

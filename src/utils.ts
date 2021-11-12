@@ -9,10 +9,7 @@ export function getDefaultCamConstraints(): MediaStreamConstraints {
 }
 
 function getTracks(stream: MediaStream, video: boolean, audio: boolean): MediaStreamTrack[] {
-  return [
-    ...(video && stream.getVideoTracks()),
-    ...(audio && stream.getAudioTracks()),
-  ];
+  return [...(video && stream.getVideoTracks()), ...(audio && stream.getAudioTracks())];
 }
 
 function removeTrack(stream: MediaStream, track: MediaStreamTrack) {
@@ -37,7 +34,10 @@ export function removeTracksFromPeer(peerConn: RTCPeerConnection, video: boolean
 }
 
 export function setTracksEnabled(
-  stream: MediaStream, video: boolean, audio: boolean, enabled: boolean,
+  stream: MediaStream,
+  video: boolean,
+  audio: boolean,
+  enabled: boolean
 ) {
   const tracks = getTracks(stream, video, audio);
   // eslint-disable-next-line

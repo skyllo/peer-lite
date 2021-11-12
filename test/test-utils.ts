@@ -2,7 +2,9 @@ import Peer from '../src';
 import { PeerLiteOptions } from '../src/peer';
 
 declare global {
-  interface Window { Peer }
+  interface Window {
+    Peer;
+  }
 }
 
 export async function getPeer(options: PeerLiteOptions = {}) {

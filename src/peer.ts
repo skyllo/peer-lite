@@ -1,7 +1,10 @@
 /* eslint-disable no-param-reassign */
 import Emitter from 'onfire.js';
 import {
-  getDefaultCamConstraints, removeTracks, removeTracksFromPeer, setTracksEnabled,
+  getDefaultCamConstraints,
+  removeTracks,
+  removeTracksFromPeer,
+  setTracksEnabled,
 } from './utils';
 
 export interface PeerLiteOptions {
@@ -72,7 +75,7 @@ export default class Peer {
   }
 
   /** Removes the local stream of audio and or video tracks */
-  public removeTracks(video: boolean = true, audio: boolean = true) {
+  public removeTracks(video = true, audio = true) {
     removeTracks(this.streamLocal, video, audio);
     if (this.peerConn) {
       // remove tracks from peer connection
@@ -81,12 +84,12 @@ export default class Peer {
   }
 
   /** Disables the local stream of audio and or video tracks  */
-  public pauseTracks(video: boolean = true, audio: boolean = true) {
+  public pauseTracks(video = true, audio = true) {
     setTracksEnabled(this.streamLocal, video, audio, false);
   }
 
   /** Enables the local stream of audio and or video tracks */
-  public resumeTracks(video: boolean = true, audio: boolean = true) {
+  public resumeTracks(video = true, audio = true) {
     setTracksEnabled(this.streamLocal, video, audio, true);
   }
 
@@ -97,7 +100,8 @@ export default class Peer {
     // create peer connection
     this.peerConn = new RTCPeerConnection(this.options.config);
     // add local stream to peer connection
-    this.streamLocal.getTracks()
+    this.streamLocal
+      .getTracks()
       .forEach((track) => this.peerConn.addTrack(track, this.streamLocal));
 
     // setup peer connection events
@@ -159,7 +163,8 @@ export default class Peer {
           this.emit('connected');
           break;
         }
-        default: break;
+        default:
+          break;
       }
     };
 
@@ -176,7 +181,7 @@ export default class Peer {
 
     this.peerConn.onsignalingstatechange = () => {
       // workaround for Chrome: skip multiple negotiations
-      isNegotiating = (this.peerConn && this.peerConn.signalingState !== 'stable');
+      isNegotiating = this.peerConn && this.peerConn.signalingState !== 'stable';
     };
 
     this.peerConn.ondatachannel = (event) => {
@@ -270,10 +275,11 @@ export default class Peer {
   /** Sends data to another peer using a RTCDataChannel */
   public send(
     data: string | Blob | ArrayBuffer | ArrayBufferView,
-    label: string = this.options.channelName,
+    label: string = this.options.channelName
   ): boolean {
     const channel = this.channels.get(label);
     if (channel && channel.readyState === 'open' && data) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       channel.send(data);
       this.emit('channelData', { data, source: 'outgoing' });
@@ -285,7 +291,7 @@ export default class Peer {
   /** Gets existing open data channels or creates new ones */
   public getDataChannel(
     label: string = this.options.channelName,
-    opts: RTCDataChannelInit = {},
+    opts: RTCDataChannelInit = {}
   ): RTCDataChannel | null {
     if (this.isClosed()) {
       return null;
@@ -367,10 +373,12 @@ export default class Peer {
 
   // emitter
 
+  // eslint-disable-next-line @typescript-eslint/ban-types
   public on(eventName: string, cb: Function) {
     this.emitter.on(eventName, cb);
   }
 
+  // eslint-disable-next-line @typescript-eslint/ban-types
   public off(eventName: string, cb: Function) {
     this.emitter.off(eventName, cb);
   }

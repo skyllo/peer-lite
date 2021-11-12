@@ -3,6 +3,7 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   plugins: [
     '@typescript-eslint',
+    'prettier',
   ],
   env: {
     browser: true,
@@ -10,38 +11,18 @@ module.exports = {
     node: true,
   },
   extends: [
-    // 'eslint:recommended',
-    // 'plugin:@typescript-eslint/recommended',
-    // 'plugin:@typescript-eslint/eslint-recommended',
-    'airbnb',
-    'airbnb/hooks',
+    'airbnb/base',
+    'airbnb-typescript/base',
     'plugin:jest-playwright/recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:prettier/recommended',
   ],
-  settings: {
-    // support import of ts, tsx files
-    'import/resolver': {
-      node: {
-        extensions: ['.js', '.jsx', '.ts', '.tsx'],
+  overrides: [
+    {
+      files: ['*.ts', '*.tsx', '*.js'],
+      parserOptions: {
+        project: ['./tsconfig.json'],
       },
-    },
-  },
-  rules: {
-    // support import of ts, tsx files
-    'react/jsx-filename-extension': [2, { extensions: ['.js', '.jsx', '.ts', '.tsx'] }],
-    'import/extensions': [
-      'error',
-      'ignorePackages',
-      {
-        js: 'never',
-        jsx: 'never',
-        ts: 'never',
-        tsx: 'never',
-      },
-    ],
-    // fix props typescript import issue
-    'no-unused-vars': 'off',
-    '@typescript-eslint/no-unused-vars': [
-      'error',
-    ],
-  },
+    }
+  ],
 };

@@ -1,7 +1,5 @@
 import React from 'react';
-import {
-  BrowserRouter as Router, Route, Link, Redirect, Switch,
-} from 'react-router-dom';
+import { BrowserRouter as Router, Route, Link, Redirect, Switch } from 'react-router-dom';
 import styled from 'styled-components';
 import GlobalStyles from './globalStyles';
 import Basic from './pages/Basic';

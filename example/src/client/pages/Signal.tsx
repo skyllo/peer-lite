@@ -3,9 +3,7 @@ import styled from 'styled-components';
 import ChatBox from '../components/ChatBox';
 import CamVideo from '../components/CamVideo';
 import CamActions from '../components/CamActions';
-import {
-  usePeer, useSocket, useCreatePeer, useCreateSocket,
-} from '../utils/hooks';
+import { usePeer, useSocket, useCreatePeer, useCreateSocket } from '../utils/hooks';
 import Peer from '../../../../src/peer';
 
 const SignalStyled = styled.div`
@@ -15,8 +13,8 @@ const SignalStyled = styled.div`
   grid-template-rows: 1fr 40px;
   grid-gap: 20px;
   grid-template-areas:
-    "chat remote local"
-    "chat actions actions";
+    'chat remote local'
+    'chat actions actions';
 
   padding-right: 20px;
 
@@ -99,18 +97,8 @@ export default function Signal() {
   return (
     <SignalStyled>
       <ChatBox className="chat" peer={peer} socket={socket} />
-      <CamVideo
-        className="remote"
-        id="remoteVideo"
-        muted={false}
-        stream={streamRemote}
-      />
-      <CamVideo
-        className="local"
-        id="localVideo"
-        muted
-        stream={streamLocal}
-      />
+      <CamVideo className="remote" id="remoteVideo" muted={false} stream={streamRemote} />
+      <CamVideo className="local" id="localVideo" muted stream={streamLocal} />
       <CamActions className="actions" peer={peer} socket={socket} />
     </SignalStyled>
   );

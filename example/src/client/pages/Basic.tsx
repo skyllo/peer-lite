@@ -9,8 +9,7 @@ const BasicStyled = styled.div`
   box-sizing: border-box;
   grid-template-columns: 1fr 1fr;
   grid-gap: 20px;
-  grid-template-areas:
-    "remote local";
+  grid-template-areas: 'remote local';
 
   padding: 20px;
 
@@ -64,18 +63,8 @@ export default function Basic() {
 
   return (
     <BasicStyled>
-      <CamVideo
-        className="remote"
-        id="remoteVideo"
-        muted={false}
-        stream={streamRemote}
-      />
-      <CamVideo
-        className="local"
-        id="localVideo"
-        muted
-        stream={streamLocal}
-      />
+      <CamVideo className="remote" id="remoteVideo" muted={false} stream={streamRemote} />
+      <CamVideo className="local" id="localVideo" muted stream={streamLocal} />
     </BasicStyled>
   );
 }

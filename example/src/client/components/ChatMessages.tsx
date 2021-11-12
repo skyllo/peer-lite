@@ -43,9 +43,12 @@ export default function ChatMessages(props: Props) {
   const myRef = useRef<HTMLDivElement>();
   const [messages, dispatchMessage] = useReducer((state, action) => {
     switch (action.type) {
-      case 'add': return [...state, action.message];
-      case 'clear': return [];
-      default: return state;
+      case 'add':
+        return [...state, action.message];
+      case 'clear':
+        return [];
+      default:
+        return state;
     }
   }, []);
 
@@ -87,8 +90,8 @@ export default function ChatMessages(props: Props) {
     addMessage(data, clazz);
   });
 
-  usePeer(peer, 'error', ({ name, err }) => {
-    addMessage(`${name} - ${err}`, 'error');
+  usePeer(peer, 'error', ({ name, error }) => {
+    addMessage(`${name} - ${error}`, 'error');
   });
 
   return (
@@ -96,10 +99,7 @@ export default function ChatMessages(props: Props) {
       <h2>Messages</h2>
 
       {messages.map((msg) => (
-        <div
-          className={`message message--${msg.from}`}
-          key={msg.time}
-        >
+        <div className={`message message--${msg.from}`} key={msg.time}>
           {`[${msg.from}]: ${msg.message}`}
         </div>
       ))}

@@ -11,8 +11,8 @@ module.exports = {
     node: true,
   },
   extends: [
-    'airbnb/base',
-    'airbnb-typescript/base',
+    'airbnb',
+    'airbnb-typescript',
     'plugin:jest-playwright/recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:prettier/recommended',
@@ -26,6 +26,8 @@ module.exports = {
     }
   ],
   rules: {
-    'import/prefer-default-export': 'off'
+    '@typescript-eslint/no-var-requires': 'off',
+    'import/prefer-default-export': 'off',
+    'react/require-default-props': 'off'
   }
 };

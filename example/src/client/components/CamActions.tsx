@@ -37,8 +37,12 @@ export default function CamActions(props: Props) {
 
   return (
     <CamActionsStyled className={className}>
-      <button className="button" type="button" onClick={hangup}>Hang Up</button>
-      <button className="button" type="button" onClick={call}>Call</button>
+      <button className="button" type="button" onClick={hangup}>
+        Hang Up
+      </button>
+      <button className="button" type="button" onClick={call}>
+        Call
+      </button>
     </CamActionsStyled>
   );
 }

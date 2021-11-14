@@ -1,5 +1,7 @@
+type ListenerFunction = (...args) => void;
+
 export class EventEmitter {
-  private listeners = {};
+  private listeners: Record<string, ListenerFunction[]> = {};
 
   public on(eventName, listener) {
     this.listeners[eventName] = this.listeners[eventName] || [];

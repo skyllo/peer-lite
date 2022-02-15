@@ -1,9 +1,8 @@
 /* eslint-disable no-async-promise-executor */
+import { test, expect } from '@playwright/test';
 import { rollup, RollupOptions } from 'rollup';
 import rollupConfig from '../build/rollup.config';
 import * as TestUtils from './test-utils';
-
-jest.setTimeout(5000);
 
 const { connectPeers, getPeer, handshake } = TestUtils;
 
@@ -12,7 +11,7 @@ const config: RollupOptions = {
   output: rollupConfig.output,
 };
 
-beforeAll(async () => {
+test.beforeEach(async ({ page }) => {
   // generate code from rollup
   const bundle = await rollup(config);
   const { output } = await bundle.generate(config.output[0]);
@@ -36,9 +35,9 @@ beforeAll(async () => {
         .join(' ')
     );
   });
-}, 5000);
+});
 
-it('should emit the local stream', async () => {
+test('should emit the local stream', async ({ page }) => {
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve) => {
@@ -54,7 +53,7 @@ it('should emit the local stream', async () => {
   );
 });
 
-it('should set the local stream and be active', async () => {
+test('should set the local stream and be active', async ({ page }) => {
   const isStreamLocalActive = await page.evaluate(async () => {
     const stream = await window.Peer.getUserMedia();
     const peer = await getPeer();
@@ -65,7 +64,7 @@ it('should set the local stream and be active', async () => {
   expect(isStreamLocalActive).toEqual(true);
 });
 
-it('should not recreate a new connection on reset', async () => {
+test('should not recreate a new connection on reset', async ({ page }) => {
   const isEqual = await page.evaluate(async () => {
     const peer = await getPeer();
     await peer.init();
@@ -78,7 +77,7 @@ it('should not recreate a new connection on reset', async () => {
   expect(isEqual).toEqual(true);
 });
 
-it('should reset an active connection on reset', async () => {
+test('should reset an active connection on reset', async ({ page }) => {
   const isEqual = await page.evaluate(
     () =>
       new Promise(async (resolve) => {
@@ -102,7 +101,7 @@ it('should reset an active connection on reset', async () => {
   expect(isEqual).toEqual(true);
 });
 
-it('should emit both peer remote streams', async () => {
+test('should emit both peer remote streams', async ({ page }) => {
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve) => {
@@ -132,7 +131,9 @@ it('should emit both peer remote streams', async () => {
   );
 });
 
-it('should renegotiate the connection when disabling and enabling the local stream', async () => {
+test('should renegotiate the connection when disabling and enabling the local stream', async ({
+  page,
+}) => {
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve) => {
@@ -158,7 +159,7 @@ it('should renegotiate the connection when disabling and enabling the local stre
   );
 });
 
-it('should enable and disable tracks correctly', async () => {
+test('should enable and disable tracks correctly', async ({ page }) => {
   const actual = await page.evaluate(
     () =>
       new Promise(async (resolve) => {
@@ -193,7 +194,7 @@ it('should enable and disable tracks correctly', async () => {
   expect(actual).toEqual([true, false, true]);
 });
 
-it('should send data to other peer using data channels', async () => {
+test('should send data to other peer using data channels', async ({ page }) => {
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve, reject) => {
@@ -222,7 +223,9 @@ it('should send data to other peer using data channels', async () => {
   );
 });
 
-it('should send data to other peer then close using negotiated data channels', async () => {
+test('should send data to other peer then close using negotiated data channels', async ({
+  page,
+}) => {
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve, reject) => {

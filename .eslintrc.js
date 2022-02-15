@@ -13,7 +13,6 @@ module.exports = {
   extends: [
     'airbnb',
     'airbnb-typescript',
-    'plugin:jest-playwright/recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:prettier/recommended',
   ],

@@ -2,6 +2,7 @@
 import { PlaywrightTestConfig, devices } from '@playwright/test';
 
 const config: PlaywrightTestConfig = {
+  globalTimeout: 20 * 1000,
   use: {
     ignoreHTTPSErrors: true,
     headless: true,
@@ -12,19 +13,12 @@ const config: PlaywrightTestConfig = {
         '--no-sandbox', // disable Chrome's sandbox as we trust the content
         '--disable-setuid-sandbox', // disable Linux SUID sandbox
       ],
-      firefoxUserPrefs: {
-        'media.navigator.streams.fake': true, // avoids the need to grant camera/microphone permissions
-      },
     },
   },
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
     },
   ],
   webServer: {

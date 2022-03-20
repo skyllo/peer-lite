@@ -11,7 +11,7 @@
     "outDir": "dist",
     "lib": ["esnext", "dom"],
     "typeRoots": ["node_modules/@types"],
-    "types": ["jest", "webrtc"],
+    "types": ["webrtc"],
     "jsx": "react"
   },
   "exclude": [

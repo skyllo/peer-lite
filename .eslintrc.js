@@ -7,7 +7,6 @@ module.exports = {
   ],
   env: {
     browser: true,
-    jest: true,
     node: true,
   },
   extends: [
@@ -15,6 +14,7 @@ module.exports = {
     'airbnb-typescript',
     'plugin:@typescript-eslint/recommended',
     'plugin:prettier/recommended',
+    'plugin:playwright/playwright-test',
   ],
   overrides: [
     {

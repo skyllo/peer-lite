@@ -1,12 +1,7 @@
 import { RollupOptions } from 'rollup';
-import babel from '@rollup/plugin-babel';
-import commonjs from '@rollup/plugin-commonjs';
-import nodeResolve from '@rollup/plugin-node-resolve';
+import swc from 'rollup-plugin-swc';
 import typescript2 from '@rollup/plugin-typescript';
-import { terser } from 'rollup-plugin-terser';
 import typescript from 'typescript';
-
-const isTest = process.env.NODE_ENV === 'test';
 
 const rollupConfig: RollupOptions = {
   input: 'src/index.ts',
@@ -31,10 +26,23 @@ const rollupConfig: RollupOptions = {
       tsconfig: './tsconfig.json',
       include: ['./src/**.*'],
     }),
-    !isTest && babel({ babelHelpers: 'bundled' }),
-    nodeResolve(),
-    commonjs(),
-    terser(),
+    swc({
+      sourceMaps: true,
+      minify: true,
+      jsc: {
+        minify: {
+          compress: true,
+          mangle: true,
+        },
+      },
+      env: {
+        targets: {
+          browsers: ['last 1 chrome version', 'last 1 firefox version', 'last 1 safari version'],
+        },
+        mode: 'entry',
+        coreJs: '3',
+      },
+    }),
   ],
 };
 

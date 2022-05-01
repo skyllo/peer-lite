@@ -9,7 +9,7 @@ const rollupConfig: RollupOptions = {
     {
       file: 'dist/index.js',
       format: 'umd',
-      name: 'PeerLite',
+      name: 'Peer',
       sourcemap: true,
       interop: false,
     },

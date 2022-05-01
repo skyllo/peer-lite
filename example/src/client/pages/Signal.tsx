@@ -4,7 +4,7 @@ import ChatBox from '../components/ChatBox';
 import CamVideo from '../components/CamVideo';
 import CamActions from '../components/CamActions';
 import { usePeer, useSocket, useCreatePeer, useCreateSocket } from '../utils/hooks';
-import { Peer } from '../../../../src';
+import Peer from '../../../../src';
 
 const SignalStyled = styled.div`
   display: grid;

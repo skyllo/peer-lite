@@ -1,11 +1,8 @@
-import { Peer, PeerOptions } from '../src';
+import Peer, { PeerOptions } from '../src';
 
 declare global {
   interface Window {
     Peer: typeof Peer;
-    PeerLite: {
-      Peer: typeof Peer;
-    };
   }
 }
 

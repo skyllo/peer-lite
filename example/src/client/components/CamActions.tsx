@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Socket } from 'socket.io-client';
-import { Peer } from '../../../../src';
+import Peer from '../../../../src';
 
 const CamActionsStyled = styled.div`
   display: flex;

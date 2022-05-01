@@ -8,7 +8,7 @@ import {
   setTracksEnabled,
 } from './utils';
 
-export class Peer {
+export default class Peer {
   private peerConn: RTCPeerConnection;
 
   private readonly streamLocal: MediaStream = new MediaStream();

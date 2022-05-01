@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Socket } from 'socket.io-client';
 import ChatMessages from './ChatMessages';
-import { Peer } from '../../../../src';
+import Peer from '../../../../src';
 
 const ChatBoxStyled = styled.div`
   display: flex;

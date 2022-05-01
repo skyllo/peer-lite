@@ -20,10 +20,6 @@ test.beforeEach(async ({ page }) => {
   await page.goto('https://localhost:3077');
   // evaluate generated code
   await page.evaluate(code);
-  // update window object
-  await page.evaluate(() => {
-    window.Peer = window.PeerLite.Peer;
-  });
   // add test utils functions to page
   await page.addScriptTag({ content: `${connectPeers} ${getPeer} ${handshake}` });
   // add page error listener

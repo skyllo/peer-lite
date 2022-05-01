@@ -17,7 +17,7 @@ export class Peer {
 
   private readonly emitter = new EventEmitter() as TypedEmitter<PeerEvents>;
 
-  private isMakingOffer = false;
+  private makingOffer = false;
 
   private readonly options: PeerOptions = {
     batchCandidates: true,
@@ -166,7 +166,7 @@ export class Peer {
     this.peerConn.onnegotiationneeded = () => {
       // only emit negotiation if already connected
       if (this.isConnected()) {
-        this.isMakingOffer = true;
+        this.makingOffer = true;
         this.emit('negotiation');
       }
     };
@@ -218,7 +218,7 @@ export class Peer {
       this.error('Failed to call', e);
       throw e;
     } finally {
-      this.isMakingOffer = false;
+      this.makingOffer = false;
     }
   }
 
@@ -227,7 +227,7 @@ export class Peer {
     try {
       await this.reset();
 
-      const offerCollision = this.isMakingOffer || this.peerConn.signalingState !== 'stable';
+      const offerCollision = this.makingOffer || this.peerConn.signalingState !== 'stable';
 
       if (offerCollision) {
         await Promise.all([
@@ -319,9 +319,7 @@ export class Peer {
     if (this.peerConn) {
       this.peerConn.close();
       this.peerConn = null;
-      if (!this.isMakingOffer) {
-        this.emit('disconnected');
-      }
+      this.emit('disconnected', this.makingOffer);
     }
   }
 
@@ -349,6 +347,10 @@ export class Peer {
 
   public isClosed(): boolean {
     return this.status() === 'closed';
+  }
+
+  public isMakingOffer(): boolean {
+    return this.makingOffer;
   }
 
   public getPeerConnection() {

@@ -16,7 +16,7 @@ export interface PeerEvents {
   connecting: VoidFunction;
   connected: VoidFunction;
   negotiation: VoidFunction;
-  disconnected: VoidFunction;
+  disconnected: (isMakingOffer: boolean) => void;
   status: (status: RTCIceConnectionState) => void;
   onicecandidates: (iceCandidates: RTCIceCandidate[]) => void;
   // MediaStream

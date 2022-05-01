@@ -155,8 +155,10 @@ test('should renegotiate the connection when adding a new stream', async ({ page
           resolve();
         });
 
-        peer2.on('disconnected', async () => {
-          reject();
+        peer2.on('disconnected', async (isMakingOffer) => {
+          if (!isMakingOffer) {
+            reject();
+          }
         });
 
         // connect peers together
@@ -188,8 +190,10 @@ test('should renegotiate the connection when adding a new stream and not emit di
           resolve();
         });
 
-        peer2.on('disconnected', async () => {
-          reject();
+        peer2.on('disconnected', async (isMakingOffer) => {
+          if (!isMakingOffer) {
+            reject();
+          }
         });
 
         // connect peers together

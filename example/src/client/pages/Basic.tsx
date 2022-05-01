@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import CamVideo from '../components/CamVideo';
-import Peer from '../../../../src/peer';
+import { Peer } from '../../../../src';
 import { useCreatePeer, usePeer } from '../utils/hooks';
 
 const BasicStyled = styled.div`

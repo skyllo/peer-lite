@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 import { EventEmitter } from './emitter';
-import { Arguments, PeerEvents, TypedEmitter } from './types';
+import { Arguments, PeerEvents, PeerOptions, TypedEmitter } from './types';
 import {
   getDefaultCamConstraints,
   removeTracks,
@@ -8,20 +8,7 @@ import {
   setTracksEnabled,
 } from './utils';
 
-export interface PeerLiteOptions {
-  batchCandidates?: boolean;
-  batchCandidatesTimeout?: number;
-  enableDataChannels?: boolean;
-  config?: RTCConfiguration;
-  constraints?: MediaStreamConstraints;
-  offerOptions?: RTCOfferOptions;
-  answerOptions?: RTCAnswerOptions;
-  channelName?: string;
-  channelOptions?: RTCDataChannelInit;
-  sdpTransform?: (sdp: string) => string;
-}
-
-export default class Peer {
+export class Peer {
   private peerConn: RTCPeerConnection;
 
   private readonly streamLocal: MediaStream = new MediaStream();
@@ -30,7 +17,9 @@ export default class Peer {
 
   private readonly emitter = new EventEmitter() as TypedEmitter<PeerEvents>;
 
-  private readonly options: PeerLiteOptions = {
+  private isMakingOffer = false;
+
+  private readonly options: PeerOptions = {
     batchCandidates: true,
     batchCandidatesTimeout: 200,
     enableDataChannels: true,
@@ -45,7 +34,7 @@ export default class Peer {
   };
 
   /** Creates a Peer instance */
-  public constructor(options?: PeerLiteOptions) {
+  public constructor(options?: PeerOptions) {
     this.options = { ...this.options, ...options };
   }
 
@@ -75,13 +64,18 @@ export default class Peer {
     }
   }
 
-  /** Removes the local stream of audio and or video tracks */
+  /** Removes the local and remote stream of audio and or video tracks */
   public removeTracks(video = true, audio = true) {
     removeTracks(this.streamLocal, video, audio);
     if (this.peerConn) {
       // remove tracks from peer connection
       removeTracksFromPeer(this.peerConn, video, audio);
     }
+  }
+
+  /** Removes both local and remote streams of both audio and video */
+  public stop() {
+    removeTracks(this.streamLocal, true, true);
   }
 
   /** Disables the local stream of audio and or video tracks  */
@@ -169,20 +163,12 @@ export default class Peer {
       }
     };
 
-    // setup negotiation flag
-    let isNegotiating = false;
-
     this.peerConn.onnegotiationneeded = () => {
       // only emit negotiation if already connected
-      if (this.isConnected() && !isNegotiating) {
-        isNegotiating = true;
+      if (this.isConnected()) {
+        this.isMakingOffer = true;
         this.emit('negotiation');
       }
-    };
-
-    this.peerConn.onsignalingstatechange = () => {
-      // workaround for Chrome: skip multiple negotiations
-      isNegotiating = this.peerConn && this.peerConn.signalingState !== 'stable';
     };
 
     this.peerConn.ondatachannel = (event) => {
@@ -231,6 +217,8 @@ export default class Peer {
     } catch (e) {
       this.error('Failed to call', e);
       throw e;
+    } finally {
+      this.isMakingOffer = false;
     }
   }
 
@@ -239,7 +227,16 @@ export default class Peer {
     try {
       await this.reset();
 
-      await this.peerConn.setRemoteDescription(offer);
+      const offerCollision = this.isMakingOffer || this.peerConn.signalingState !== 'stable';
+
+      if (offerCollision) {
+        await Promise.all([
+          this.peerConn.setLocalDescription({ type: 'rollback' }),
+          this.peerConn.setRemoteDescription(offer),
+        ]);
+      } else {
+        await this.peerConn.setRemoteDescription(offer);
+      }
     } catch (e) {
       this.error('Failed to answer (remote)', e);
       throw e;
@@ -322,7 +319,9 @@ export default class Peer {
     if (this.peerConn) {
       this.peerConn.close();
       this.peerConn = null;
-      this.emit('disconnected');
+      if (!this.isMakingOffer) {
+        this.emit('disconnected');
+      }
     }
   }
 

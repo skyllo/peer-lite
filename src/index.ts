@@ -1,2 +1,2 @@
-export { default } from './peer';
-export { PeerEvents } from './types';
+export { Peer } from './peer';
+export { PeerEvents, PeerOptions } from './types';

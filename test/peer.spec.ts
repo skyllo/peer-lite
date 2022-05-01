@@ -20,6 +20,10 @@ test.beforeEach(async ({ page }) => {
   await page.goto('https://localhost:3077');
   // evaluate generated code
   await page.evaluate(code);
+  // update window object
+  await page.evaluate(() => {
+    window.Peer = window.PeerLite.Peer;
+  });
   // add test utils functions to page
   await page.addScriptTag({ content: `${connectPeers} ${getPeer} ${handshake}` });
   // add page error listener
@@ -131,12 +135,10 @@ test('should emit both peer remote streams', async ({ page }) => {
   );
 });
 
-test('should renegotiate the connection when disabling and enabling the local stream', async ({
-  page,
-}) => {
+test('should renegotiate the connection when adding a new stream', async ({ page }) => {
   await page.evaluate(
     () =>
-      new Promise<void>(async (resolve) => {
+      new Promise<void>(async (resolve, reject) => {
         const peer1 = await getPeer();
         const peer2 = await getPeer();
 
@@ -149,8 +151,45 @@ test('should renegotiate the connection when disabling and enabling the local st
         });
 
         peer2.on('negotiation', async () => {
-          await handshake(peer1, peer2);
+          await handshake(peer2, peer1);
           resolve();
+        });
+
+        peer2.on('disconnected', async () => {
+          reject();
+        });
+
+        // connect peers together
+        await connectPeers(peer1, peer2, stream);
+      })
+  );
+});
+
+test('should renegotiate the connection when adding a new stream and not emit disconnect when offers collide', async ({
+  page,
+}) => {
+  await page.evaluate(
+    () =>
+      new Promise<void>(async (resolve, reject) => {
+        const peer1 = await getPeer();
+        const peer2 = await getPeer();
+
+        const stream = await window.Peer.getUserMedia();
+
+        peer2.on('connected', async () => {
+          await peer2.addStream(stream, true);
+        });
+
+        peer2.on('negotiation', async () => {
+          // trigger offerCollision
+          await peer1.call();
+          await peer2.call();
+          await handshake(peer2, peer1);
+          resolve();
+        });
+
+        peer2.on('disconnected', async () => {
+          reject();
         });
 
         // connect peers together

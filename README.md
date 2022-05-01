@@ -105,7 +105,7 @@ The tests run inside a headless Chrome with [puppeteer](https://github.com/Googl
 using [jest-puppeteer](https://github.com/smooth-code/jest-puppeteer) to integrate with [Jest](https://jestjs.io/).
 These run pretty quickly and allow testing of real WebRTC APIs in a real browser.
 
-```javascript
+```bash
 yarn test
 ```
 

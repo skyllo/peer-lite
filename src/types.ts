@@ -31,3 +31,16 @@ export interface PeerEvents {
     data: string | Blob | ArrayBuffer | ArrayBufferView;
   }) => void;
 }
+
+export interface PeerOptions {
+  batchCandidates?: boolean;
+  batchCandidatesTimeout?: number;
+  enableDataChannels?: boolean;
+  config?: RTCConfiguration;
+  constraints?: MediaStreamConstraints;
+  offerOptions?: RTCOfferOptions;
+  answerOptions?: RTCAnswerOptions;
+  channelName?: string;
+  channelOptions?: RTCDataChannelInit;
+  sdpTransform?: (sdp: string) => string;
+}

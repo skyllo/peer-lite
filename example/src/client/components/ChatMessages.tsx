@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useReducer } from 'react';
 import styled from 'styled-components';
 import { Socket } from 'socket.io-client';
 import { useSocket, usePeer } from '../utils/hooks';
-import Peer from '../../../../src/peer';
+import { Peer } from '../../../../src';
 
 const ChatMessagesStyled = styled.div`
   padding: 10px;

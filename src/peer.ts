@@ -163,12 +163,20 @@ export default class Peer {
       }
     };
 
+    let isNegotiating = false;
+
     this.peerConn.onnegotiationneeded = () => {
       // only emit negotiation if already connected
-      if (this.isConnected()) {
+      if (this.isConnected() && !isNegotiating) {
+        isNegotiating = true;
         this.makingOffer = true;
         this.emit('negotiation');
       }
+    };
+
+    this.peerConn.onsignalingstatechange = () => {
+      // workaround for Chrome: skip multiple negotiations
+      isNegotiating = this.peerConn && this.peerConn.signalingState !== 'stable';
     };
 
     this.peerConn.ondatachannel = (event) => {
@@ -198,6 +206,9 @@ export default class Peer {
   public async call(options: RTCOfferOptions = {}): Promise<RTCSessionDescriptionInit> {
     try {
       await this.reset();
+
+      // prevent order mismatch of local offer sdp
+      await this.peerConn.setLocalDescription();
 
       const { channelName, channelOptions, enableDataChannels } = this.options;
       if (enableDataChannels) {

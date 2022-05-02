@@ -12,7 +12,11 @@
     "lib": ["esnext", "dom"],
     "typeRoots": ["node_modules/@types"],
     "types": ["webrtc"],
-    "jsx": "react"
+    "jsx": "react",
+    "baseUrl": ".",
+    "paths": {
+      "peer-lite": ["src"]
+    }
   },
   "exclude": [
     "dist",

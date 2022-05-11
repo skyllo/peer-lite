@@ -227,50 +227,43 @@ export default class Peer {
     }
   }
 
-  public async signal({
-    description,
-    candidate,
-  }: {
-    description?: RTCSessionDescriptionInit;
-    candidate?: RTCIceCandidate;
-  }) {
-    if (description) {
-      try {
-        if (!this.peerConn) {
-          await this.reset();
-        }
-
-        console.log(this.options.name, '<-', description.type);
-
-        const offerCollision =
-          description.type === 'offer' &&
-          (this.makingOffer || this.peerConn.signalingState !== 'stable');
-
-        this.ignoreOffer = !this.polite && offerCollision;
-        if (this.ignoreOffer) {
-          console.log(this.options.name, '- ignoreOffer');
-          return;
-        }
-
-        await this.peerConn.setRemoteDescription(description);
-        if (description.type === 'offer') {
-          await this.peerConn.setLocalDescription();
-          console.log(this.options.name, '->', this.peerConn.localDescription.type);
-          this.emit('signal', this.peerConn.localDescription);
-        }
-        this.polite = true;
-      } catch (err) {
-        this.error('Failed to set local/remote descriptions', err);
+  public async signal(description: RTCSessionDescriptionInit) {
+    try {
+      if (!this.peerConn) {
+        await this.reset();
       }
+
+      console.log(this.options.name, '<-', description.type);
+
+      const offerCollision =
+        description.type === 'offer' &&
+        (this.makingOffer || this.peerConn.signalingState !== 'stable');
+
+      this.ignoreOffer = !this.polite && offerCollision;
+      if (this.ignoreOffer) {
+        console.log(this.options.name, '- ignoreOffer');
+        return;
+      }
+
+      await this.peerConn.setRemoteDescription(description);
+      if (description.type === 'offer') {
+        await this.peerConn.setLocalDescription();
+        console.log(this.options.name, '->', this.peerConn.localDescription.type);
+        this.emit('signal', this.peerConn.localDescription);
+      }
+      this.polite = true;
+    } catch (err) {
+      this.error('Failed to set local/remote descriptions', err);
     }
-    if (candidate) {
-      try {
-        console.log(this.options.name, '<-', 'icecandidate');
-        await this.peerConn?.addIceCandidate(candidate);
-      } catch (err) {
-        if (!this.ignoreOffer) {
-          this.error('Failed to addIceCandidate', err);
-        }
+  }
+
+  public async addIceCandidate(candidate: RTCIceCandidate) {
+    try {
+      console.log(this.options.name, '<-', 'icecandidate');
+      await this.peerConn?.addIceCandidate(candidate);
+    } catch (err) {
+      if (!this.ignoreOffer) {
+        this.error('Failed to addIceCandidate', err);
       }
     }
   }

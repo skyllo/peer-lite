@@ -16,20 +16,20 @@ export async function getPeer(options: PeerOptions = {}) {
 
 export async function setupPeers(peer1: Peer, peer2: Peer, stream: MediaStream) {
   peer1.on('signal', (description) => {
-    peer2.signal({ description });
+    peer2.signal(description);
   });
 
   peer2.on('signal', (description) => {
-    peer1.signal({ description });
+    peer1.signal(description);
   });
 
   peer1.on('onicecandidates', async (candidates) => {
-    const promises = candidates.map(async (candidate) => peer2.signal({ candidate }));
+    const promises = candidates.map(async (candidate) => peer2.addIceCandidate(candidate));
     await Promise.all(promises);
   });
 
   peer2.on('onicecandidates', async (candidates) => {
-    const promises = candidates.map(async (candidate) => peer1.signal({ candidate }));
+    const promises = candidates.map(async (candidate) => peer1.addIceCandidate(candidate));
     await Promise.all(promises);
   });
 

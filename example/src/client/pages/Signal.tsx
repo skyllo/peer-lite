@@ -43,7 +43,7 @@ export default function Signal() {
 
   // socket handlers
   useSocket(socket, 'onicecandidates', async ({ candidates }) => {
-    const promises = candidates.map(async (candidate) => peer.signal({ candidate }));
+    const promises = candidates.map(async (candidate) => peer.addIceCandidate(candidate));
     await Promise.all(promises);
   });
 
@@ -51,7 +51,7 @@ export default function Signal() {
     if (description.type === 'offer') {
       await peer.destroy();
     }
-    await peer.signal({ description });
+    await peer.signal(description);
   });
 
   // peer handlers

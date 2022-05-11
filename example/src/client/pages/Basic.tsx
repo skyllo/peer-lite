@@ -29,21 +29,21 @@ export default function Basic() {
   const peer2 = useCreatePeer();
 
   usePeer(peer1, 'onicecandidates', async (candidates) => {
-    const promises = candidates.map(async (candidate) => peer2.signal({ candidate }));
+    const promises = candidates.map(async (candidate) => peer2.addIceCandidate(candidate));
     await Promise.all(promises);
   });
 
   usePeer(peer2, 'onicecandidates', async (candidates) => {
-    const promises = candidates.map(async (candidate) => peer1.signal({ candidate }));
+    const promises = candidates.map(async (candidate) => peer1.addIceCandidate(candidate));
     await Promise.all(promises);
   });
 
   usePeer(peer1, 'signal', async (description) => {
-    await peer2.signal({ description });
+    await peer2.signal(description);
   });
 
   usePeer(peer2, 'signal', async (description) => {
-    await peer1.signal({ description });
+    await peer1.signal(description);
   });
 
   usePeer(peer1, 'streamRemote', (remoteStream) => {

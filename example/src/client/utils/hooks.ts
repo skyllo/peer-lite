@@ -1,18 +1,18 @@
 import { useEffect, useRef } from 'react';
 import { Socket } from 'socket.io-client';
-import Peer, { PeerEvents } from '../../../../src';
+import Peer, { PeerEvents, PeerOptions } from "../../../../src";
 import { createSocket } from './socket';
 
-export function useCreatePeer(): Peer {
+export function useCreatePeer(options: PeerOptions = {}): Peer {
   const peerRef = useRef<Peer>();
 
   if (!peerRef.current) {
-    peerRef.current = new Peer();
+    peerRef.current = new Peer(options);
   }
 
   useEffect(
     () => () => {
-      peerRef.current.hangup();
+      peerRef.current.destroy();
     },
     []
   );
@@ -46,8 +46,11 @@ export function useCreateSocket(): typeof Socket {
   return socketRef.current;
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export function useSocket(socket: typeof Socket, eventName: string, func: Function) {
+export function useSocket(
+  socket: typeof Socket,
+  eventName: 'signal' | 'onicecandidates' | 'disconnected' | 'connect_error' | 'error',
+  func: (params: { description: any; candidates: any }) => void
+) {
   useEffect(() => {
     socket.on(eventName, func);
     return () => {

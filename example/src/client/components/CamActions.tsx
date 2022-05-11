@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Socket } from 'socket.io-client';
 import Peer from '../../../../src';
 
 const CamActionsStyled = styled.div`
@@ -18,21 +17,19 @@ const CamActionsStyled = styled.div`
 interface Props {
   className?: string;
   peer: Peer;
-  socket: typeof Socket;
 }
 
 export default function CamActions(props: Props) {
-  const { className, peer, socket } = props;
+  const { className, peer } = props;
 
   async function call() {
+    await peer.destroy();
     // create offer
-    const offer = await peer.call();
-    // send offer remotely
-    socket.emit('offer', { offer });
+    await peer.start();
   }
 
   function hangup() {
-    peer.hangup();
+    peer.destroy();
   }
 
   return (

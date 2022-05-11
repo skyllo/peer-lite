@@ -19,7 +19,7 @@ const userIds = new Set();
 function emit(name, socket, data) {
   userIds.forEach((user) => {
     if (user !== socket.id) {
-      console.log(`Sending ${name}`, user);
+      console.log(`Sending ${name} -> ${user}`);
       io.to(user).emit(name, data);
     }
   });
@@ -27,31 +27,19 @@ function emit(name, socket, data) {
 
 io.on('connection', (socket) => {
   userIds.add(socket.id);
-  console.log('Added new User', socket.id);
+  console.log('Added User', socket.id);
 
   socket.on('disconnect', () => {
-    console.log('disconnect', socket.id);
+    console.log('Disconnect User', socket.id);
     userIds.delete(socket.id);
   });
 
   socket.on('onicecandidates', (data) => {
-    console.log('onicecandidates', socket.id);
     emit('onicecandidates', socket, data);
   });
 
-  socket.on('answer', (data) => {
-    console.log('answer', socket.id);
-    emit('answer', socket, data);
-  });
-
-  socket.on('offer', (data) => {
-    console.log('offer', socket.id);
-    emit('offer', socket, data);
-  });
-
-  socket.on('accept', (data) => {
-    console.log('accept', socket.id);
-    emit('accept', socket, data);
+  socket.on('signal', (data) => {
+    emit('signal', socket, data);
   });
 });
 

@@ -4,7 +4,9 @@ import { rollup, RollupOptions } from 'rollup';
 import rollupConfig from '../build/rollup.config';
 import * as TestUtils from './test-utils';
 
-const { connectPeers, getPeer, handshake } = TestUtils;
+const { setupPeers, getPeer } = TestUtils;
+
+process.env.BUILD = 'development';
 
 const config: RollupOptions = {
   ...rollupConfig,
@@ -21,7 +23,7 @@ test.beforeEach(async ({ page }) => {
   // evaluate generated code
   await page.evaluate(code);
   // add test utils functions to page
-  await page.addScriptTag({ content: `${connectPeers} ${getPeer} ${handshake}` });
+  await page.addScriptTag({ content: `${setupPeers} ${getPeer}` });
   // add page error listener
   page.on('pageerror', (err) => {
     console.log(err);
@@ -40,12 +42,16 @@ test.beforeEach(async ({ page }) => {
 test('should emit the local stream', async ({ page }) => {
   await page.evaluate(
     () =>
-      new Promise<void>(async (resolve) => {
+      new Promise<void>(async (resolve, reject) => {
         const peer1 = await getPeer();
         const stream = await window.Peer.getUserMedia();
 
-        peer1.on('streamLocal', () => {
-          resolve();
+        peer1.on('streamLocal', (localStream) => {
+          if (localStream) {
+            resolve();
+          } else {
+            reject();
+          }
         });
 
         await peer1.addStream(stream);
@@ -64,10 +70,10 @@ test('should set the local stream and be active', async ({ page }) => {
   expect(isStreamLocalActive).toEqual(true);
 });
 
-test('should not recreate a new connection on reset', async ({ page }) => {
+test('should not reset a new connection', async ({ page }) => {
   const isEqual = await page.evaluate(async () => {
     const peer = await getPeer();
-    await peer.init();
+    await peer.reset();
     const p1 = peer.getPeerConnection();
     await peer.reset();
     const p2 = peer.getPeerConnection();
@@ -77,12 +83,12 @@ test('should not recreate a new connection on reset', async ({ page }) => {
   expect(isEqual).toEqual(true);
 });
 
-test('should reset an active connection on reset', async ({ page }) => {
+test('should reset an stable connection', async ({ page }) => {
   const isEqual = await page.evaluate(
     () =>
       new Promise(async (resolve) => {
-        const peer1 = await getPeer();
-        const peer2 = await getPeer();
+        const peer1 = await getPeer({ name: 'peer1' });
+        const peer2 = await getPeer({ name: 'peer2' });
 
         const stream = await window.Peer.getUserMedia();
 
@@ -93,20 +99,20 @@ test('should reset an active connection on reset', async ({ page }) => {
           resolve(p1 !== p2);
         });
 
-        // connect peers together
-        await connectPeers(peer1, peer2, stream);
+        await setupPeers(peer1, peer2, stream);
+        await peer1.start();
       })
   );
 
   expect(isEqual).toEqual(true);
 });
 
-test('should emit both peer remote streams', async ({ page }) => {
+test('should emit both peers remote streams', async ({ page }) => {
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve) => {
-        const peer1 = await getPeer();
-        const peer2 = await getPeer();
+        const peer1 = await getPeer({ name: 'peer1' });
+        const peer2 = await getPeer({ name: 'peer2' });
 
         const stream = await window.Peer.getUserMedia();
 
@@ -121,12 +127,8 @@ test('should emit both peer remote streams', async ({ page }) => {
           if (remoteCount === 4) resolve();
         });
 
-        // connect peers together
-        await connectPeers(peer1, peer2, stream);
-
-        // start and stop local stream
-        await peer1.removeTracks();
-        await peer1.addStream(stream);
+        await setupPeers(peer1, peer2, stream);
+        await peer1.start();
       })
   );
 });
@@ -135,10 +137,12 @@ test('should renegotiate the connection when adding a new stream', async ({ page
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve, reject) => {
-        const peer1 = await getPeer();
-        const peer2 = await getPeer();
+        const peer1 = await getPeer({ name: 'peer1' });
+        const peer2 = await getPeer({ name: 'peer2' });
 
         const stream = await window.Peer.getUserMedia();
+
+        let remoteCount = 0;
 
         peer2.on('connected', async () => {
           setTimeout(async () => {
@@ -146,54 +150,41 @@ test('should renegotiate the connection when adding a new stream', async ({ page
           }, 500);
         });
 
-        peer2.on('negotiation', async () => {
-          await handshake(peer2, peer1);
-          resolve();
+        peer2.on('disconnected', () => {
+          reject();
         });
 
-        peer2.on('disconnected', async (isMakingOffer) => {
-          if (!isMakingOffer) {
-            reject();
+        peer1.on('streamRemote', () => {
+          remoteCount += 1;
+          if (remoteCount === 4) {
+            resolve();
           }
         });
 
-        // connect peers together
-        await connectPeers(peer1, peer2, stream);
+        await setupPeers(peer1, peer2, stream);
+        await peer1.start();
       })
   );
 });
 
-test('should renegotiate the connection when adding a new stream and not emit disconnect when offers collide', async ({
+test('should connect two peers that make an offer simultaneously when one is polite', async ({
   page,
 }) => {
   await page.evaluate(
     () =>
-      new Promise<void>(async (resolve, reject) => {
-        const peer1 = await getPeer();
-        const peer2 = await getPeer();
+      new Promise<void>(async (resolve) => {
+        const peer1 = await getPeer({ name: 'peer1' });
+        const peer2 = await getPeer({ name: 'peer2' });
 
         const stream = await window.Peer.getUserMedia();
 
         peer2.on('connected', async () => {
-          await peer2.addStream(stream, true);
-        });
-
-        peer2.on('negotiation', async () => {
-          // trigger offerCollision
-          await peer1.call();
-          await peer2.call();
-          await handshake(peer2, peer1);
           resolve();
         });
 
-        peer2.on('disconnected', async (isMakingOffer) => {
-          if (!isMakingOffer) {
-            reject();
-          }
-        });
-
-        // connect peers together
-        await connectPeers(peer1, peer2, stream);
+        await setupPeers(peer1, peer2, stream);
+        await peer1.start({ polite: true });
+        await peer2.start();
       })
   );
 });
@@ -202,8 +193,8 @@ test('should enable and disable tracks correctly', async ({ page }) => {
   const actual = await page.evaluate(
     () =>
       new Promise(async (resolve) => {
-        const peer1 = await getPeer();
-        const peer2 = await getPeer();
+        const peer1 = await getPeer({ name: 'peer1' });
+        const peer2 = await getPeer({ name: 'peer2' });
 
         const stream = await window.Peer.getUserMedia();
 
@@ -225,8 +216,8 @@ test('should enable and disable tracks correctly', async ({ page }) => {
           resolve(result);
         });
 
-        // connect peers together
-        await connectPeers(peer1, peer2, stream);
+        await setupPeers(peer1, peer2, stream);
+        await peer1.start();
       })
   );
 
@@ -237,13 +228,13 @@ test('should send data to other peer using data channels', async ({ page }) => {
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve, reject) => {
-        const peer1 = await getPeer({ channelName: 'default' });
-        const peer2 = await getPeer({ channelName: 'default' });
+        const peer1 = await getPeer({ name: 'peer1', channelName: 'test' });
+        const peer2 = await getPeer({ name: 'peer2', channelName: 'test' });
 
         const stream = await window.Peer.getUserMedia();
 
-        peer1.on('channelData', async ({ data }) => {
-          if (data === 'hello world') {
+        peer1.on('channelData', async ({ channel, data, source }) => {
+          if (channel.label === 'test' && data === 'hello world' && source === 'incoming') {
             resolve();
           } else {
             reject(new Error('did not get correct channel data'));
@@ -256,8 +247,8 @@ test('should send data to other peer using data channels', async ({ page }) => {
           }, 500);
         });
 
-        // connect peers together
-        await connectPeers(peer1, peer2, stream);
+        await setupPeers(peer1, peer2, stream);
+        await peer1.start();
       })
   );
 });
@@ -268,8 +259,8 @@ test('should send data to other peer then close using negotiated data channels',
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve, reject) => {
-        const peer1 = await getPeer();
-        const peer2 = await getPeer();
+        const peer1 = await getPeer({ name: 'peer1' });
+        const peer2 = await getPeer({ name: 'peer2' });
 
         const stream = await window.Peer.getUserMedia();
 
@@ -295,8 +286,8 @@ test('should send data to other peer then close using negotiated data channels',
           }, 500);
         });
 
-        // connect peers together
-        await connectPeers(peer1, peer2, stream);
+        await setupPeers(peer1, peer2, stream);
+        await peer1.start();
 
         peer1.getPeerConnection().addEventListener('datachannel', () => {
           reject(new Error('got non-negotiated data channel'));

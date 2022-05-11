@@ -14,20 +14,22 @@ export async function getPeer(options: PeerOptions = {}) {
   return peer;
 }
 
-export async function handshake(peer1: Peer, peer2: Peer) {
-  const offer = await peer1.call();
-  const answer = await peer2.answer(offer);
-  await peer1.accept(answer);
-}
+export async function setupPeers(peer1: Peer, peer2: Peer, stream: MediaStream) {
+  peer1.on('signal', (description) => {
+    peer2.signal({ description });
+  });
 
-export async function connectPeers(peer1: Peer, peer2: Peer, stream: MediaStream) {
+  peer2.on('signal', (description) => {
+    peer1.signal({ description });
+  });
+
   peer1.on('onicecandidates', async (candidates) => {
-    const promises = candidates.map(async (candidate) => peer2.addIceCandidate(candidate));
+    const promises = candidates.map(async (candidate) => peer2.signal({ candidate }));
     await Promise.all(promises);
   });
 
   peer2.on('onicecandidates', async (candidates) => {
-    const promises = candidates.map(async (candidate) => peer1.addIceCandidate(candidate));
+    const promises = candidates.map(async (candidate) => peer1.signal({ candidate }));
     await Promise.all(promises);
   });
 
@@ -39,10 +41,6 @@ export async function connectPeers(peer1: Peer, peer2: Peer, stream: MediaStream
     document.querySelector<HTMLVideoElement>('#video2').srcObject = remoteStream;
   });
 
-  // start local streams
   await peer1.addStream(stream);
   await peer2.addStream(stream);
-
-  // do call, answer and accept
-  await handshake(peer1, peer2);
 }

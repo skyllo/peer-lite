@@ -11,12 +11,12 @@ export interface TypedEmitter<Events> {
 }
 
 export interface PeerEvents {
-  error: (data: { name: string; error: Error }) => void;
+  error: (data: { name: string; message: string; error: Error }) => void;
   // Connection Status and RTCIceCandidates
   connecting: VoidFunction;
   connected: VoidFunction;
-  negotiation: VoidFunction;
-  disconnected: (isMakingOffer: boolean) => void;
+  disconnected: () => void;
+  signal: (description: RTCSessionDescriptionInit) => void;
   status: (status: RTCIceConnectionState) => void;
   onicecandidates: (iceCandidates: RTCIceCandidate[]) => void;
   // MediaStream
@@ -36,6 +36,7 @@ export interface PeerOptions {
   batchCandidates?: boolean;
   batchCandidatesTimeout?: number;
   enableDataChannels?: boolean;
+  name?: string;
   config?: RTCConfiguration;
   constraints?: MediaStreamConstraints;
   offerOptions?: RTCOfferOptions;

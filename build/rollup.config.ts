@@ -3,6 +3,8 @@ import swc from 'rollup-plugin-swc';
 import typescript2 from '@rollup/plugin-typescript';
 import typescript from 'typescript';
 
+const isDevelopment = process.env.BUILD === 'development';
+
 const rollupConfig: RollupOptions = {
   input: 'src/index.ts',
   output: [
@@ -31,7 +33,9 @@ const rollupConfig: RollupOptions = {
       minify: true,
       jsc: {
         minify: {
-          compress: true,
+          compress: {
+            drop_console: !isDevelopment,
+          },
           mangle: true,
         },
       },

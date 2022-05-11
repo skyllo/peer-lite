@@ -20,7 +20,7 @@
     "@types/styled-components": "^5.1.2",
     "cross-env": "^7.0.2",
     "nodemon": "^2.0.4",
-    "parcel-bundler": "^1.12.4",
+    "parcel-bundler": "^1.12.5",
     "rimraf": "^3.0.2",
     "typescript": "^3.9.7"
   },

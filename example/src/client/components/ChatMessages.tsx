@@ -64,10 +64,14 @@ export default function ChatMessages(props: Props) {
 
   // socket handlers
   useSocket(socket, 'connect_error', (err) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     addMessage(`WebSocket - ${err.message}`, 'error');
   });
 
   useSocket(socket, 'error', (err) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     addMessage(`WebSocket - ${err.message}`, 'error');
   });
 
@@ -78,7 +82,6 @@ export default function ChatMessages(props: Props) {
 
   usePeer(peer, 'connected', () => {
     addMessage('Connected!', 'you');
-    peer.getDataChannel('messages');
   });
 
   usePeer(peer, 'disconnected', () => {

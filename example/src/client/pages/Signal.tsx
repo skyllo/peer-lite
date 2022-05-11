@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import Peer from '../../../../src';
 import ChatBox from '../components/ChatBox';
 import CamVideo from '../components/CamVideo';
 import CamActions from '../components/CamActions';
 import { usePeer, useSocket, useCreatePeer, useCreateSocket } from '../utils/hooks';
-import Peer from '../../../../src';
 
 const SignalStyled = styled.div`
   display: grid;
@@ -38,45 +38,29 @@ const SignalStyled = styled.div`
 export default function Signal() {
   const [streamLocal, setStreamLocal] = useState<MediaStream>();
   const [streamRemote, setStreamRemote] = useState<MediaStream>();
-  const peer = useCreatePeer();
+  const peer = useCreatePeer({ enableDataChannels: true, channelName: 'messages' });
   const socket = useCreateSocket();
 
   // socket handlers
-  useSocket(socket, 'offer', async ({ offer }) => {
-    console.log('socket <- offer()', offer);
-    const answer = await peer.answer(offer);
-    console.log('socket -> answer()', answer);
-    socket.emit('answer', { answer });
-  });
-
   useSocket(socket, 'onicecandidates', async ({ candidates }) => {
-    console.log('socket <- onicecandidates()', candidates);
-    const promises = candidates.map(async (candidate) => peer.addIceCandidate(candidate));
+    const promises = candidates.map(async (candidate) => peer.signal({ candidate }));
     await Promise.all(promises);
   });
 
-  useSocket(socket, 'answer', async ({ answer }) => {
-    console.log('socket <- answer()', answer);
-    await peer.accept(answer);
+  useSocket(socket, 'signal', async ({ description }) => {
+    if (description.type === 'offer') {
+      await peer.destroy();
+    }
+    await peer.signal({ description });
   });
 
   // peer handlers
   usePeer(peer, 'onicecandidates', (candidates) => {
-    console.log('peer - onicecandidates()', candidates);
     socket.emit('onicecandidates', { candidates });
   });
 
-  usePeer(peer, 'disconnected', async () => {
-    console.log('peer - hangup()');
-    await peer.hangup();
-  });
-
-  usePeer(peer, 'negotiation', async () => {
-    console.log('peer - negotiation()');
-    // create offer
-    const offer = await peer.call();
-    // send offer remotely
-    socket.emit('offer', { offer });
+  usePeer(peer, 'signal', async (description) => {
+    socket.emit('signal', { description });
   });
 
   usePeer(peer, 'streamRemote', (remoteStream) => {
@@ -99,7 +83,7 @@ export default function Signal() {
       <ChatBox className="chat" peer={peer} socket={socket} />
       <CamVideo className="remote" id="remoteVideo" muted={false} stream={streamRemote} />
       <CamVideo className="local" id="localVideo" muted stream={streamLocal} />
-      <CamActions className="actions" peer={peer} socket={socket} />
+      <CamActions className="actions" peer={peer} />
     </SignalStyled>
   );
 }

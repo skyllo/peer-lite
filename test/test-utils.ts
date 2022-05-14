@@ -14,7 +14,7 @@ export async function getPeer(options: PeerOptions = {}) {
   return peer;
 }
 
-export async function setupPeers(peer1: Peer, peer2: Peer, stream: MediaStream) {
+export async function setupPeers(peer1: Peer, peer2: Peer, stream?: MediaStream) {
   peer1.on('signal', (description) => {
     peer2.signal(description);
   });
@@ -41,6 +41,8 @@ export async function setupPeers(peer1: Peer, peer2: Peer, stream: MediaStream) 
     document.querySelector<HTMLVideoElement>('#video2').srcObject = remoteStream;
   });
 
-  await peer1.addStream(stream);
-  await peer2.addStream(stream);
+  if (stream) {
+    await peer1.addStream(stream);
+    await peer2.addStream(stream);
+  }
 }

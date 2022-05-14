@@ -70,6 +70,19 @@ test('should set the local stream and be active', async ({ page }) => {
   expect(isStreamLocalActive).toEqual(true);
 });
 
+test('should remove tracks from local stream peer', async ({ page }) => {
+  const isNoTracks = await page.evaluate(async () => {
+    const stream = await window.Peer.getUserMedia();
+    const peer = await getPeer();
+    await peer.addStream(stream);
+    peer.removeTracks(true, false);
+    peer.removeTracks(false, true);
+    return peer.getStreamLocal().getTracks().length === 0;
+  });
+
+  expect(isNoTracks).toEqual(true);
+});
+
 test('should not reset a new connection', async ({ page }) => {
   const isEqual = await page.evaluate(async () => {
     const peer = await getPeer();

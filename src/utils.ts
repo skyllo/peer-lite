@@ -9,7 +9,7 @@ export function getDefaultCamConstraints(): MediaStreamConstraints {
 }
 
 function getTracks(stream: MediaStream, video: boolean, audio: boolean): MediaStreamTrack[] {
-  return [...(video && stream.getVideoTracks()), ...(audio && stream.getAudioTracks())];
+  return [...(video ? stream.getVideoTracks() : []), ...(audio ? stream.getAudioTracks() : [])];
 }
 
 function removeTrack(stream: MediaStream, track: MediaStreamTrack) {

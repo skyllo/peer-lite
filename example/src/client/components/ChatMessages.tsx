@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useReducer } from 'react';
 import styled from 'styled-components';
 import { Socket } from 'socket.io-client';
-import { useSocket, usePeer } from '../utils/hooks';
 import Peer from '../../../../src';
+import { useSocket, usePeer } from '../utils/hooks';
 
 const ChatMessagesStyled = styled.div`
   padding: 10px;
@@ -32,6 +32,12 @@ const ChatMessagesStyled = styled.div`
   }
 `;
 
+interface Message {
+  message: string;
+  from: string;
+  time: number;
+}
+
 interface Props {
   className?: string;
   peer: Peer;
@@ -41,23 +47,26 @@ interface Props {
 export default function ChatMessages(props: Props) {
   const { className, peer, socket } = props;
   const myRef = useRef<HTMLDivElement>();
-  const [messages, dispatchMessage] = useReducer((state, action) => {
-    switch (action.type) {
-      case 'add':
-        return [...state, action.message];
-      case 'clear':
-        return [];
-      default:
-        return state;
-    }
-  }, []);
+  const [messages, dispatchMessage] = useReducer(
+    (state: Message[], action: { message: Message; type: string }) => {
+      switch (action.type) {
+        case 'add':
+          return [...state, action.message];
+        case 'clear':
+          return [];
+        default:
+          return state;
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     const elem = myRef.current;
     elem.scrollTop = elem.scrollHeight;
   }, [myRef, messages.length]);
 
-  function addMessage(message, from) {
+  function addMessage(message: string, from: string) {
     const msgObj = { message, from, time: Date.now() };
     dispatchMessage({ type: 'add', message: msgObj });
   }
@@ -90,11 +99,11 @@ export default function ChatMessages(props: Props) {
 
   usePeer(peer, 'channelData', ({ data, source }) => {
     const clazz = source === 'outgoing' ? 'you' : 'partner';
-    addMessage(data, clazz);
+    addMessage(data.toString(), clazz);
   });
 
   usePeer(peer, 'error', ({ name, error }) => {
-    addMessage(`${name} - ${error}`, 'error');
+    addMessage(`${name} - ${error.message}`, 'error');
   });
 
   return (

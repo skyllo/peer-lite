@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Socket } from 'socket.io-client';
-import Peer, { PeerEvents, PeerOptions } from "../../../../src";
+import Peer, { PeerEvents, PeerOptions } from '../../../../src';
 import { createSocket } from './socket';
 
 export function useCreatePeer(options: PeerOptions = {}): Peer {

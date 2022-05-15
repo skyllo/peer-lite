@@ -31,14 +31,14 @@ export function removeTracks(stream: MediaStream, video: boolean, audio: boolean
 }
 
 export function removeTracksFromPeer(peerConn: RTCPeerConnection, video: boolean, audio: boolean) {
-  peerConn.getSenders().forEach((sender) => {
-    if (!sender.track) return;
-    const isVideo = video && sender.track.kind === 'video';
-    const isAudio = audio && sender.track.kind === 'audio';
-    if (isVideo || isAudio) {
-      peerConn.removeTrack(sender);
-    }
-  });
+  peerConn
+    .getSenders()
+    .filter((sender) => {
+      const isVideo = video && sender?.track.kind === 'video';
+      const isAudio = audio && sender?.track.kind === 'audio';
+      return isVideo || isAudio;
+    })
+    .forEach((sender) => peerConn.removeTrack(sender));
 }
 
 export function setTracksEnabled(
@@ -48,6 +48,8 @@ export function setTracksEnabled(
   enabled: boolean
 ) {
   const tracks = getTracks(stream, video, audio);
-  // eslint-disable-next-line
-  tracks.forEach(track => track.enabled = enabled);
+  tracks.forEach((track) => {
+    // eslint-disable-next-line no-param-reassign
+    track.enabled = enabled;
+  });
 }

@@ -41,7 +41,7 @@ interface Message {
 interface Props {
   className?: string;
   peer: Peer;
-  socket: typeof Socket;
+  socket: Socket;
 }
 
 export default function ChatMessages(props: Props) {
@@ -75,12 +75,14 @@ export default function ChatMessages(props: Props) {
   useSocket(socket, 'connect_error', (err) => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     addMessage(`WebSocket - ${err.message}`, 'error');
   });
 
   useSocket(socket, 'error', (err) => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     addMessage(`WebSocket - ${err.message}`, 'error');
   });
 

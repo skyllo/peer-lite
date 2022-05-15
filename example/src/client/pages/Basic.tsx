@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
-import CamVideo from '../components/CamVideo';
 import Peer from '../../../../src';
+import CamVideo from '../components/CamVideo';
 import { useCreatePeer, usePeer } from '../utils/hooks';
 
 const BasicStyled = styled.div`
@@ -54,17 +54,19 @@ export default function Basic() {
     setStreamLocal(remoteStream);
   });
 
+  const start = useCallback(async () => {
+    const stream = await Peer.getUserMedia();
+
+    // start local streams
+    peer1.addStream(stream);
+    peer2.addStream(stream);
+
+    // do call, answer and accept
+    peer1.start();
+  }, []);
+
   useEffect(() => {
-    (async () => {
-      const stream = await Peer.getUserMedia();
-
-      // start local streams
-      peer1.addStream(stream);
-      peer2.addStream(stream);
-
-      // do call, answer and accept
-      peer1.start();
-    })();
+    start().catch((err) => console.log(err));
   }, []);
 
   return (

@@ -29,8 +29,8 @@ export function usePeer<E extends keyof PeerEvents>(peer: Peer, eventName: E, fu
   }, []);
 }
 
-export function useCreateSocket(): typeof Socket {
-  const socketRef = useRef<typeof Socket>();
+export function useCreateSocket(): Socket {
+  const socketRef = useRef<Socket>();
 
   if (!socketRef.current) {
     socketRef.current = createSocket();
@@ -47,14 +47,14 @@ export function useCreateSocket(): typeof Socket {
 }
 
 export function useSocket(
-  socket: typeof Socket,
+  socket: Socket,
   eventName: 'signal' | 'onicecandidates' | 'disconnected' | 'connect_error' | 'error',
   func: (params: { description: any; candidates: any }) => void
 ) {
   useEffect(() => {
     socket.on(eventName, func);
     return () => {
-      socket.removeListener(eventName, func);
+      socket.off(eventName, func);
     };
   }, []);
 }

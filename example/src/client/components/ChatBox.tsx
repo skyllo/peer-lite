@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { ChangeEvent, KeyboardEvent, useState } from 'react';
 import styled from 'styled-components';
 import { Socket } from 'socket.io-client';
 import ChatMessages from './ChatMessages';
@@ -40,7 +40,7 @@ const ChatBoxStyled = styled.div`
 interface Props {
   className?: string;
   peer: Peer;
-  socket: typeof Socket;
+  socket: Socket;
 }
 
 export default function ChatBox(props: Props) {
@@ -54,14 +54,14 @@ export default function ChatBox(props: Props) {
     }
   }
 
-  function handleKeyPress(event) {
+  function handleKeyPress(event: KeyboardEvent) {
     if ((event.which === 13 || event.keyCode === 13) && !event.shiftKey) {
       send();
       event.preventDefault();
     }
   }
 
-  function handleChange(event) {
+  function handleChange(event: ChangeEvent<HTMLTextAreaElement>) {
     setMessageToSend(event.target.value);
   }
 

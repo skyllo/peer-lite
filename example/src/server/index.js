@@ -14,6 +14,7 @@ const options = {
 
 const server = https.createServer(options);
 const io = socketIO(server);
+
 const userIds = new Set();
 
 function emit(name, socket, data) {

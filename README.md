@@ -2,7 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/skyllo/peer-lite.svg?style=svg&circle-token=cd1df6b2a763871eb9c52ec816a40e0ba0e9beeb)](https://circleci.com/gh/skyllo/peer-lite)
 
-Lightweight WebRTC browser library that supports video, audio and data channels - written in TypeScript.
+Lightweight WebRTC browser library that supports video, audio and data channels.
 
 # Features
 * Lightweight! 6kb in size (2kb gzip)

@@ -34,8 +34,8 @@ export function removeTracksFromPeer(peerConn: RTCPeerConnection, video: boolean
   peerConn
     .getSenders()
     .filter((sender) => {
-      const isVideo = video && sender?.track.kind === 'video';
-      const isAudio = audio && sender?.track.kind === 'audio';
+      const isVideo = video && sender.track?.kind === 'video';
+      const isAudio = audio && sender.track?.kind === 'audio';
       return isVideo || isAudio;
     })
     .forEach((sender) => peerConn.removeTrack(sender));

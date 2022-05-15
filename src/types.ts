@@ -11,7 +11,7 @@ export interface TypedEmitter<Events> {
 }
 
 export interface PeerEvents {
-  error: (data: { name: string; message: string; error: Error }) => void;
+  error: (data: { name: string; message: string; error?: Error }) => void;
   // Connection Status and RTCIceCandidates
   connecting: VoidFunction;
   connected: VoidFunction;

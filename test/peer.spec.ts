@@ -16,7 +16,7 @@ const config: RollupOptions = {
 test.beforeEach(async ({ page }) => {
   // generate code from rollup
   const bundle = await rollup(config);
-  const { output } = await bundle.generate(config.output[0]);
+  const { output } = await bundle.generate(config.output?.[0]);
   const [{ code }] = output;
   // goto localhost
   await page.goto('https://localhost:3077');
@@ -218,7 +218,7 @@ test('should enable and disable tracks correctly', async ({ page }) => {
             .some((track) => track.enabled);
         }
 
-        const result = [];
+        const result: boolean[] = [];
 
         peer2.on('streamRemote', () => {
           result.push(isTracksEnabled());
@@ -290,7 +290,7 @@ test('should send data to other peer then close using negotiated data channels',
             reject(new Error('did not get correct channel data'));
           } else {
             const channel = peer1.getDataChannel();
-            channel.close();
+            channel?.close();
           }
         });
 

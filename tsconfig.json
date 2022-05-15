@@ -7,6 +7,7 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "stripInternal": true,
+    "strictNullChecks": true,
     "esModuleInterop": true,
     "outDir": "dist",
     "lib": ["esnext", "dom"],

@@ -24,13 +24,14 @@ export default class Peer {
 
   private ignoreOffer = false;
 
-  private readonly options: PeerOptions = {
+  private readonly options: Required<PeerOptions> = {
     batchCandidates: true,
     batchCandidatesTimeout: 200,
     name: 'peer',
     config: {
       iceServers: [{ urls: ['stun:stun.l.google.com:19302'] }],
     },
+    constraints: {},
     offerOptions: {},
     answerOptions: {},
     enableDataChannels: false,
@@ -60,13 +61,12 @@ export default class Peer {
       .forEach((track) => this.peerConn.addTrack(track, this.streamLocal));
 
     // setup peer connection events
-    const candidates = [];
-    let candidatesId = null;
+    const candidates: RTCIceCandidate[] = [];
+    let candidatesId: ReturnType<typeof window.setTimeout>;
 
     function clearBatchedCandidates() {
       clearTimeout(candidatesId);
       candidates.length = 0;
-      candidatesId = null;
     }
 
     this.peerConn.onicecandidate = (event) => {
@@ -138,11 +138,13 @@ export default class Peer {
         if (this.peerConn.signalingState !== 'stable') return;
 
         console.log(`${this.options.name}.onnegotiationneeded()`);
-        offer.sdp = this.options.sdpTransform(offer.sdp);
+        offer.sdp = offer.sdp && this.options.sdpTransform(offer.sdp);
         await this.peerConn.setLocalDescription(offer);
 
-        console.log(this.options.name, '->', offer.type);
-        this.emit('signal', this.peerConn.localDescription);
+        if (this.peerConn.localDescription) {
+          console.log(this.options.name, '->', offer.type);
+          this.emit('signal', this.peerConn.localDescription);
+        }
       } catch (err) {
         this.error('Failed in negotiation needed', err);
       } finally {
@@ -164,7 +166,7 @@ export default class Peer {
 
   public start({ polite = false }: { polite?: boolean } = {}) {
     try {
-      if (!this.peerConn) {
+      if (this.isClosed()) {
         this.init();
       }
 
@@ -182,7 +184,7 @@ export default class Peer {
 
   public async signal(description: RTCSessionDescriptionInit) {
     try {
-      if (!this.peerConn) {
+      if (this.isClosed()) {
         this.init();
       }
 
@@ -201,8 +203,10 @@ export default class Peer {
       await this.peerConn.setRemoteDescription(description);
       if (description.type === 'offer') {
         await this.peerConn.setLocalDescription();
-        console.log(this.options.name, '->', this.peerConn.localDescription.type);
-        this.emit('signal', this.peerConn.localDescription);
+        if (this.peerConn.localDescription) {
+          console.log(this.options.name, '->', this.peerConn.localDescription.type);
+          this.emit('signal', this.peerConn.localDescription);
+        }
       }
       this.polite = true;
     } catch (err) {
@@ -239,14 +243,14 @@ export default class Peer {
   public getDataChannel(
     label: string = this.options.channelName,
     opts: RTCDataChannelInit = {}
-  ): RTCDataChannel | null {
+  ): RTCDataChannel | undefined {
     if (!this.options.enableDataChannels) {
       this.error('Failed to createDataChannel as "enableDataChannels" is false');
-      return null;
+      return undefined;
     }
     if (this.isClosed()) {
       this.error('Failed to createDataChannel as peer connection is closed');
-      return null;
+      return undefined;
     }
     if (this.channels.has(label)) {
       return this.channels.get(label);
@@ -273,12 +277,11 @@ export default class Peer {
 
   /** Closes any active peer connection */
   public destroy() {
-    if (this.peerConn) {
+    if (!this.isClosed()) {
       this.polite = true;
       this.makingOffer = false;
       this.ignoreOffer = false;
       this.peerConn.close();
-      this.peerConn = null;
       console.log(`${this.options.name}.disconnected()`);
       this.emit('disconnected');
     }

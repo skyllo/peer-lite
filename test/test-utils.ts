@@ -34,11 +34,11 @@ export function setupPeers(peer1: Peer, peer2: Peer, stream?: MediaStream) {
   });
 
   peer1.on('streamRemote', (remoteStream) => {
-    document.querySelector<HTMLVideoElement>('#video1').srcObject = remoteStream;
+    document.querySelector<HTMLVideoElement>('#video1')!.srcObject = remoteStream;
   });
 
   peer2.on('streamRemote', (remoteStream) => {
-    document.querySelector<HTMLVideoElement>('#video2').srcObject = remoteStream;
+    document.querySelector<HTMLVideoElement>('#video2')!.srcObject = remoteStream;
   });
 
   if (stream) {

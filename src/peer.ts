@@ -3,6 +3,7 @@ import { EventEmitter } from './emitter';
 import { Arguments, PeerEvents, PeerOptions, TypedEmitter } from './types';
 import {
   getDefaultCamConstraints,
+  randomHex,
   removeTracks,
   removeTracksFromPeer,
   setTracksEnabled,
@@ -33,7 +34,7 @@ export default class Peer {
     offerOptions: {},
     answerOptions: {},
     enableDataChannels: false,
-    channelName: 'peer-lite',
+    channelName: randomHex(20),
     channelOptions: {},
     sdpTransform: (sdp) => sdp,
   };

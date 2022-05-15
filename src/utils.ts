@@ -8,6 +8,14 @@ export function getDefaultCamConstraints(): MediaStreamConstraints {
   return { audio, video };
 }
 
+export function randomHex(n: number) {
+  const bytes = new Uint8Array(n);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 function getTracks(stream: MediaStream, video: boolean, audio: boolean): MediaStreamTrack[] {
   return [...(video ? stream.getVideoTracks() : []), ...(audio ? stream.getAudioTracks() : [])];
 }

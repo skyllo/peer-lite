@@ -23,6 +23,7 @@ export interface PeerEvents {
   streamLocal: (stream: MediaStream) => void;
   streamRemote: (stream: MediaStream) => void;
   // RTCDataChannel
+  channelOpen: (data: { channel: RTCDataChannel }) => void;
   channelClosed: (data: { channel: RTCDataChannel }) => void;
   channelError: (data: { channel: RTCDataChannel; error: RTCErrorEvent }) => void;
   channelData: (data: {

@@ -22,10 +22,10 @@ interface Props {
 export default function CamActions(props: Props) {
   const { className, peer } = props;
 
-  async function call() {
-    await peer.destroy();
+  function call() {
+    peer.destroy();
     // create offer
-    await peer.start();
+    peer.start();
   }
 
   function hangup() {

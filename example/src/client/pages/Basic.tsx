@@ -59,11 +59,11 @@ export default function Basic() {
       const stream = await Peer.getUserMedia();
 
       // start local streams
-      await peer1.addStream(stream);
-      await peer2.addStream(stream);
+      peer1.addStream(stream);
+      peer2.addStream(stream);
 
       // do call, answer and accept
-      await peer1.start();
+      peer1.start();
     })();
   }, []);
 

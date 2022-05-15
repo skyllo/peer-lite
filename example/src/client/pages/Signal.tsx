@@ -49,7 +49,7 @@ export default function Signal() {
 
   useSocket(socket, 'signal', async ({ description }) => {
     if (description.type === 'offer') {
-      await peer.destroy();
+      peer.destroy();
     }
     await peer.signal(description);
   });
@@ -59,7 +59,7 @@ export default function Signal() {
     socket.emit('onicecandidates', { candidates });
   });
 
-  usePeer(peer, 'signal', async (description) => {
+  usePeer(peer, 'signal', (description) => {
     socket.emit('signal', { description });
   });
 
@@ -74,7 +74,7 @@ export default function Signal() {
   useEffect(() => {
     (async () => {
       const stream = await Peer.getUserMedia();
-      await peer.addStream(stream);
+      peer.addStream(stream);
     })();
   }, []);
 

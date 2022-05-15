@@ -13,6 +13,7 @@ module.exports = {
     'airbnb',
     'airbnb-typescript',
     'plugin:@typescript-eslint/recommended',
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
     'plugin:prettier/recommended',
     'plugin:playwright/playwright-test',
   ],
@@ -26,7 +27,13 @@ module.exports = {
   ],
   rules: {
     '@typescript-eslint/no-var-requires': 'off',
+    "@typescript-eslint/no-unsafe-argument": "off",
+    "@typescript-eslint/no-misused-promises": [
+      "error", {
+        "checksVoidReturn": false
+      }
+    ],
     'import/prefer-default-export': 'off',
-    'react/require-default-props': 'off'
+    'react/require-default-props': 'off',
   }
 };

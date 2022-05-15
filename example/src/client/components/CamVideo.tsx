@@ -21,7 +21,7 @@ interface Props {
 
 export default function CamVideo(props: Props) {
   const { className = '', id, muted, stream } = props;
-  const videoRef = useRef(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const wrapper = document.getElementById(id);

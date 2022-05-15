@@ -6,7 +6,7 @@ declare global {
   }
 }
 
-export async function getPeer(options: PeerOptions = {}) {
+export function getPeer(options: PeerOptions = {}) {
   const peer: Peer = new window.Peer(options);
   peer.on('error', (err) => {
     throw new Error(err.toString());
@@ -14,13 +14,13 @@ export async function getPeer(options: PeerOptions = {}) {
   return peer;
 }
 
-export async function setupPeers(peer1: Peer, peer2: Peer, stream?: MediaStream) {
-  peer1.on('signal', (description) => {
-    peer2.signal(description);
+export function setupPeers(peer1: Peer, peer2: Peer, stream?: MediaStream) {
+  peer1.on('signal', async (description) => {
+    await peer2.signal(description);
   });
 
-  peer2.on('signal', (description) => {
-    peer1.signal(description);
+  peer2.on('signal', async (description) => {
+    await peer1.signal(description);
   });
 
   peer1.on('onicecandidates', async (candidates) => {
@@ -42,7 +42,7 @@ export async function setupPeers(peer1: Peer, peer2: Peer, stream?: MediaStream)
   });
 
   if (stream) {
-    await peer1.addStream(stream);
-    await peer2.addStream(stream);
+    peer1.addStream(stream);
+    peer2.addStream(stream);
   }
 }

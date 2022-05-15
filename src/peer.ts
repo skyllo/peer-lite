@@ -44,7 +44,7 @@ export default class Peer {
   }
 
   /** Initializes the peer connection */
-  public async init(): Promise<RTCPeerConnection> {
+  public init(): RTCPeerConnection {
     // do not reset connection if a new one already exists
     if (this.status() === 'new') {
       return this.peerConn;
@@ -68,7 +68,7 @@ export default class Peer {
       candidatesId = null;
     }
 
-    this.peerConn.onicecandidate = async (event) => {
+    this.peerConn.onicecandidate = (event) => {
       if (!event || !event.candidate) return;
       // if batching candidates then setup timeouts
       if (this.options.batchCandidates) {
@@ -161,10 +161,10 @@ export default class Peer {
     return this.peerConn;
   }
 
-  public async start({ polite = false }: { polite?: boolean } = {}) {
+  public start({ polite = false }: { polite?: boolean } = {}) {
     try {
       if (!this.peerConn) {
-        await this.init();
+        this.init();
       }
 
       console.log(`${this.options.name}.start()`);
@@ -172,7 +172,7 @@ export default class Peer {
       this.polite = polite;
 
       // ⚡ triggers "negotiationneeded" event if connected
-      await this.peerConn.restartIce();
+      this.peerConn.restartIce();
     } catch (err) {
       this.error('Failed to start', err);
       throw err;
@@ -182,7 +182,7 @@ export default class Peer {
   public async signal(description: RTCSessionDescriptionInit) {
     try {
       if (!this.peerConn) {
-        await this.init();
+        this.init();
       }
 
       console.log(this.options.name, '<-', description.type);
@@ -259,13 +259,13 @@ export default class Peer {
 
   private addDataChannel(channel: RTCDataChannel) {
     // setup data channel events
-    channel.onopen = this.emit.bind(this, 'channelOpen', { channel });
+    channel.onopen = () => this.emit('channelOpen', { channel });
     channel.onerror = (error: RTCErrorEvent) => this.emit('channelError', { channel, error });
     channel.onclose = () => {
       this.channels.delete(channel.label);
       this.emit('channelClosed', { channel });
     };
-    channel.onmessage = (event: MessageEvent) => {
+    channel.onmessage = (event: MessageEvent<string | Blob | ArrayBuffer | ArrayBufferView>) => {
       this.emit('channelData', { channel, data: event.data, source: 'incoming' });
     };
   }
@@ -318,7 +318,7 @@ export default class Peer {
   // helpers
 
   /** Add a stream to the local stream */
-  public async addStream(stream: MediaStream, replace = true) {
+  public addStream(stream: MediaStream, replace = true) {
     try {
       if (replace) {
         this.removeTracks(true, true);
@@ -332,7 +332,7 @@ export default class Peer {
   }
 
   /** Add a track to the local stream */
-  public async addTrack(track: MediaStreamTrack) {
+  public addTrack(track: MediaStreamTrack) {
     this.streamLocal.addTrack(track);
     this.emit('streamLocal', this.streamLocal);
     if (this.peerConn) {

@@ -86,10 +86,10 @@ test('should remove tracks from local stream peer', async ({ page }) => {
 test('should not reset a new connection', async ({ page }) => {
   const isEqual = await page.evaluate(async () => {
     const peer = await getPeer();
-    await peer.reset();
-    const p1 = peer.getPeerConnection();
-    await peer.reset();
-    const p2 = peer.getPeerConnection();
+    await peer.init();
+    const p1 = peer.get();
+    await peer.init();
+    const p2 = peer.get();
     return p1 === p2;
   });
 
@@ -106,9 +106,9 @@ test('should reset an stable connection', async ({ page }) => {
         const stream = await window.Peer.getUserMedia();
 
         peer2.on('connected', async () => {
-          const p1 = peer2.getPeerConnection();
-          await peer2.reset();
-          const p2 = peer2.getPeerConnection();
+          const p1 = peer2.get();
+          await peer2.init();
+          const p2 = peer2.get();
           resolve(p1 !== p2);
         });
 
@@ -241,8 +241,16 @@ test('should send data to other peer using data channels', async ({ page }) => {
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve, reject) => {
-        const peer1 = await getPeer({ name: 'peer1', channelName: 'test' });
-        const peer2 = await getPeer({ name: 'peer2', channelName: 'test' });
+        const peer1 = await getPeer({
+          name: 'peer1',
+          enableDataChannels: true,
+          channelName: 'test',
+        });
+        const peer2 = await getPeer({
+          name: 'peer2',
+          enableDataChannels: true,
+          channelName: 'test',
+        });
 
         const stream = await window.Peer.getUserMedia();
 
@@ -272,8 +280,8 @@ test('should send data to other peer then close using negotiated data channels',
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve, reject) => {
-        const peer1 = await getPeer({ name: 'peer1' });
-        const peer2 = await getPeer({ name: 'peer2' });
+        const peer1 = await getPeer({ name: 'peer1', enableDataChannels: true });
+        const peer2 = await getPeer({ name: 'peer2', enableDataChannels: true });
 
         const stream = await window.Peer.getUserMedia();
 
@@ -302,7 +310,7 @@ test('should send data to other peer then close using negotiated data channels',
         await setupPeers(peer1, peer2, stream);
         await peer1.start();
 
-        peer1.getPeerConnection().addEventListener('datachannel', () => {
+        peer1.get().addEventListener('datachannel', () => {
           reject(new Error('got non-negotiated data channel'));
         });
       })

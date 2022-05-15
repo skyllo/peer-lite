@@ -26,13 +26,13 @@ export default class Peer {
   private readonly options: PeerOptions = {
     batchCandidates: true,
     batchCandidatesTimeout: 200,
-    enableDataChannels: true,
     name: 'peer',
     config: {
       iceServers: [{ urls: ['stun:stun.l.google.com:19302'] }],
     },
     offerOptions: {},
     answerOptions: {},
+    enableDataChannels: false,
     channelName: 'peer-lite',
     channelOptions: {},
     sdpTransform: (sdp) => sdp,
@@ -43,56 +43,8 @@ export default class Peer {
     this.options = { ...this.options, ...options };
   }
 
-  /** Add a stream to the local stream */
-  public async addStream(stream: MediaStream, replace = true) {
-    try {
-      if (replace) {
-        this.removeTracks(true, true);
-      }
-      stream.getTracks().forEach((track) => this.addTrack(track));
-      return this.streamLocal;
-    } catch (err) {
-      this.error('Failed to set local stream', err);
-      throw err;
-    }
-  }
-
-  /** Add a track to the local stream */
-  public async addTrack(track: MediaStreamTrack) {
-    this.streamLocal.addTrack(track);
-    this.emit('streamLocal', this.streamLocal);
-    if (this.peerConn) {
-      // ⚡ triggers "negotiationneeded" event if connected
-      this.peerConn.addTrack(track, this.streamLocal);
-    }
-  }
-
-  /** Removes the local and remote stream of audio and/or video tracks */
-  public removeTracks(video = true, audio = true) {
-    removeTracks(this.streamLocal, video, audio);
-    if (this.peerConn) {
-      // remove tracks from peer connection
-      removeTracksFromPeer(this.peerConn, video, audio);
-    }
-  }
-
-  /** Removes local stream tracks of audio and video */
-  public stopStream() {
-    removeTracks(this.streamLocal, true, true);
-  }
-
-  /** Disables local stream tracks of audio and/or video tracks  */
-  public pauseTracks(video = true, audio = true) {
-    setTracksEnabled(this.streamLocal, video, audio, false);
-  }
-
-  /** Enables local stream tracks of audio and/or video tracks */
-  public resumeTracks(video = true, audio = true) {
-    setTracksEnabled(this.streamLocal, video, audio, true);
-  }
-
   /** Initializes the peer connection */
-  public async reset(): Promise<RTCPeerConnection> {
+  public async init(): Promise<RTCPeerConnection> {
     // do not reset connection if a new one already exists
     if (this.status() === 'new') {
       return this.peerConn;
@@ -212,7 +164,7 @@ export default class Peer {
   public async start({ polite = false }: { polite?: boolean } = {}) {
     try {
       if (!this.peerConn) {
-        await this.reset();
+        await this.init();
       }
 
       console.log(`${this.options.name}.start()`);
@@ -230,7 +182,7 @@ export default class Peer {
   public async signal(description: RTCSessionDescriptionInit) {
     try {
       if (!this.peerConn) {
-        await this.reset();
+        await this.init();
       }
 
       console.log(this.options.name, '<-', description.type);
@@ -287,7 +239,12 @@ export default class Peer {
     label: string = this.options.channelName,
     opts: RTCDataChannelInit = {}
   ): RTCDataChannel | null {
+    if (!this.options.enableDataChannels) {
+      this.error('Failed to createDataChannel as "enableDataChannels" is false');
+      return null;
+    }
     if (this.isClosed()) {
+      this.error('Failed to createDataChannel as peer connection is closed');
       return null;
     }
     if (this.channels.has(label)) {
@@ -339,11 +296,13 @@ export default class Peer {
     return this.status() === 'connected';
   }
 
+  /** Returns true if the peer is closed */
   public isClosed(): boolean {
     return this.status() === 'closed';
   }
 
-  public getPeerConnection() {
+  /** Returns RTCPeerConnection */
+  public get() {
     return this.peerConn;
   }
 
@@ -351,14 +310,54 @@ export default class Peer {
     return this.streamLocal;
   }
 
-  /** Get stats for peer connection */
-  public async getStats(): Promise<RTCStatsReport> {
-    return this.peerConn ? this.peerConn.getStats() : null;
+  private error(message: string, error?: Error) {
+    console.error(`${this.options.name}`, message, error ? `- ${error.toString()}` : '');
+    this.emit('error', { name: this.options.name, message, error });
   }
 
-  private error(message: string, error: Error) {
-    console.error(`${this.options.name}`, `${message} - ${error.toString()}`);
-    this.emit('error', { name: this.options.name, message, error });
+  // helpers
+
+  /** Add a stream to the local stream */
+  public async addStream(stream: MediaStream, replace = true) {
+    try {
+      if (replace) {
+        this.removeTracks(true, true);
+      }
+      stream.getTracks().forEach((track) => this.addTrack(track));
+      return this.streamLocal;
+    } catch (err) {
+      this.error('Failed to set local stream', err);
+      throw err;
+    }
+  }
+
+  /** Add a track to the local stream */
+  public async addTrack(track: MediaStreamTrack) {
+    this.streamLocal.addTrack(track);
+    this.emit('streamLocal', this.streamLocal);
+    if (this.peerConn) {
+      // ⚡ triggers "negotiationneeded" event if connected
+      this.peerConn.addTrack(track, this.streamLocal);
+    }
+  }
+
+  /** Removes the local and remote stream of audio and/or video tracks */
+  public removeTracks(video = true, audio = true) {
+    removeTracks(this.streamLocal, video, audio);
+    if (this.peerConn) {
+      // remove tracks from peer connection
+      removeTracksFromPeer(this.peerConn, video, audio);
+    }
+  }
+
+  /** Disables local stream tracks of audio and/or video tracks  */
+  public pauseTracks(video = true, audio = true) {
+    setTracksEnabled(this.streamLocal, video, audio, false);
+  }
+
+  /** Enables local stream tracks of audio and/or video tracks */
+  public resumeTracks(video = true, audio = true) {
+    setTracksEnabled(this.streamLocal, video, audio, true);
   }
 
   // emitter

@@ -286,10 +286,7 @@ export default class Peer {
 
   /** Returns the ICEConnectionState of the peer connection */
   public status(): RTCIceConnectionState {
-    if (this.peerConn) {
-      return this.peerConn.iceConnectionState;
-    }
-    return 'closed';
+    return this.peerConn?.iceConnectionState ?? 'closed';
   }
 
   /** Returns true if the peer is connected */
@@ -336,10 +333,8 @@ export default class Peer {
   public addTrack(track: MediaStreamTrack) {
     this.streamLocal.addTrack(track);
     this.emit('streamLocal', this.streamLocal);
-    if (this.peerConn) {
-      // ⚡ triggers "negotiationneeded" event if connected
-      this.peerConn.addTrack(track, this.streamLocal);
-    }
+    // ⚡ triggers "negotiationneeded" event if connected
+    this.peerConn?.addTrack(track, this.streamLocal);
   }
 
   /** Removes the local and remote stream of audio and/or video tracks */

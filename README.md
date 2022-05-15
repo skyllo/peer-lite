@@ -6,10 +6,11 @@ Lightweight WebRTC browser library that supports video, audio and data channels 
 
 # Features
 * Lightweight! 6kb in size (2kb gzip)
-* Using modern WebRTC APIs (no deprecations)
-* Support for [renegotiation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/onnegotiationneeded) of streams
-* Tested on latest Safari, Firefox, Chrome on MacOS (recommend to use this [shim](https://github.com/webrtc/adapter) for better support)
-* Gathering of ICE candidates is trickle only (most browsers now support trickle ICE, Chrome even has a bug that prevents you from checking support for it https://bugs.chromium.org/p/chromium/issues/detail?id=708484)
+* Zero dependencies
+* Using modern WebRTC APIs with TypeScript Types
+* ["Perfect negotiation"](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation) pattern
+* Support for [renegotiation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/onnegotiationneeded) of connection
+* ICE candidate batching
 
 # Installation
 ```bash
@@ -25,6 +26,14 @@ import Peer from 'peer-lite';
 const peer1 = new Peer();
 const peer2 = new Peer();
 
+peer1.on('signal', async (description) => {
+  await peer2.signal(description);
+})
+
+peer2.on('signal', async (description) => {
+  await peer1.signal(description);
+})
+
 peer1.on('onicecandidates', async (candidates) => {
   const promises = candidates.map(async candidate => peer2.addIceCandidate(candidate));
   await Promise.all(promises);
@@ -39,27 +48,15 @@ peer1.on('streamRemote', (stream) => {
   document.querySelector('#video1').srcObject = stream;
 });
 
-peer1.on('streamLocal', (stream) => {
-  document.querySelector('#video1').srcObject = stream;
-});
-
 peer2.on('streamRemote', (stream) => {
   document.querySelector('#video2').srcObject = stream;
 });
 
-peer2.on('streamLocal', (stream) => {
-  document.querySelector('#video1').srcObject = stream;
-});
-
 (async () => {
-  // start and set local stream
   const stream = await Peer.getUserMedia();
-  await peer1.addStream(stream)
-  await peer2.addStream(stream);
-  // handshake
-  const offer = await peer1.call();
-  const answer = await peer2.answer(offer);
-  await peer1.accept(answer);
+  peer1.addStream(stream);
+  peer2.addStream(stream);
+  peer1.start();
 })();
 ```
 
@@ -71,9 +68,11 @@ peer2.on('streamLocal', (stream) => {
 Typescript Options Definition
 
 ```typescript
-interface Options {
+export interface PeerOptions {
   batchCandidates?: boolean;
   batchCandidatesTimeout?: number;
+  enableDataChannels?: boolean;
+  name?: string;
   config?: RTCConfiguration;
   constraints?: MediaStreamConstraints;
   offerOptions?: RTCOfferOptions;
@@ -84,26 +83,10 @@ interface Options {
 }
 ```
 
-### Static Methods
-Use static helper method `getUserMedia()` to get a local video and audio stream with some default configuration.
-
-```javascript
-const peer = new Peer();
-
-peer.on('streamLocal', (streamLocal) => {
-  console.log(streamLocal);
-});
-
-(async () => {
-  const stream = await Peer.getUserMedia();
-  await peer.addStream(stream);
-})();
-```
-
 # Testing
-The tests run inside a headless Chrome with [puppeteer](https://github.com/GoogleChrome/puppeteer)
-using [jest-puppeteer](https://github.com/smooth-code/jest-puppeteer) to integrate with [Jest](https://jestjs.io/).
-These run pretty quickly and allow testing of real WebRTC APIs in a real browser.
+The tests run inside a headless Chrome with [Playwright](https://playwright.dev/)
+using [@playwright/test](https://www.npmjs.com/package/@playwright/test) with [Jest](https://jestjs.io/).
+These run quickly and allow testing of real WebRTC APIs in a real browser.
 
 ```bash
 yarn test

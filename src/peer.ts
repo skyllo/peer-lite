@@ -2,6 +2,7 @@
 import { EventEmitter } from './emitter';
 import { Arguments, PeerEvents, PeerOptions, TypedEmitter } from './types';
 import {
+  filterTracksAV,
   getDefaultCamConstraints,
   randomHex,
   removeTracks,
@@ -342,21 +343,21 @@ export default class Peer {
 
   /** Removes the local and remote stream of audio and/or video tracks */
   public removeTracks(video = true, audio = true) {
-    removeTracks(this.streamLocal, video, audio);
+    removeTracks(this.streamLocal, filterTracksAV(video, audio));
     if (this.peerConn) {
       // remove tracks from peer connection
-      removeTracksFromPeer(this.peerConn, video, audio);
+      removeTracksFromPeer(this.peerConn, filterTracksAV(video, audio));
     }
   }
 
   /** Disables local stream tracks of audio and/or video tracks  */
   public pauseTracks(video = true, audio = true) {
-    setTracksEnabled(this.streamLocal, video, audio, false);
+    setTracksEnabled(this.streamLocal, filterTracksAV(video, audio), false);
   }
 
   /** Enables local stream tracks of audio and/or video tracks */
   public resumeTracks(video = true, audio = true) {
-    setTracksEnabled(this.streamLocal, video, audio, true);
+    setTracksEnabled(this.streamLocal, filterTracksAV(video, audio), true);
   }
 
   // emitter

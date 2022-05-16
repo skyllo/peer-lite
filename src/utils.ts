@@ -1,3 +1,5 @@
+import { FilterTracksFunc } from './types';
+
 export function getDefaultCamConstraints(): MediaStreamConstraints {
   const audio = true;
   const videoObj: MediaTrackConstraints = {};
@@ -16,8 +18,16 @@ export function randomHex(n: number) {
     .join('');
 }
 
-function getTracks(stream: MediaStream, video: boolean, audio: boolean): MediaStreamTrack[] {
-  return [...(video ? stream.getVideoTracks() : []), ...(audio ? stream.getAudioTracks() : [])];
+export const filterTracksAV =
+  (video: boolean, audio: boolean): FilterTracksFunc =>
+  (track: MediaStreamTrack) => {
+    const isVideo = video && track?.kind === 'video';
+    const isAudio = audio && track?.kind === 'audio';
+    return isVideo || isAudio;
+  };
+
+function getTracks(stream: MediaStream, filterFunc: FilterTracksFunc): MediaStreamTrack[] {
+  return stream.getTracks().filter(filterFunc);
 }
 
 function removeTrack(stream: MediaStream, track: MediaStreamTrack) {
@@ -25,30 +35,23 @@ function removeTrack(stream: MediaStream, track: MediaStreamTrack) {
   stream.removeTrack(track);
 }
 
-export function removeTracks(stream: MediaStream, video: boolean, audio: boolean) {
-  const tracks = getTracks(stream, video, audio);
-  tracks.forEach((track) => removeTrack(stream, track));
+export function removeTracks(stream: MediaStream, filterFunc: FilterTracksFunc) {
+  getTracks(stream, filterFunc).forEach((track) => removeTrack(stream, track));
 }
 
-export function removeTracksFromPeer(peerConn: RTCPeerConnection, video: boolean, audio: boolean) {
+export function removeTracksFromPeer(peerConn: RTCPeerConnection, filterFunc: FilterTracksFunc) {
   peerConn
     .getSenders()
-    .filter((sender) => {
-      const isVideo = video && sender.track?.kind === 'video';
-      const isAudio = audio && sender.track?.kind === 'audio';
-      return isVideo || isAudio;
-    })
+    .filter((sender) => filterFunc(sender.track))
     .forEach((sender) => peerConn.removeTrack(sender));
 }
 
 export function setTracksEnabled(
   stream: MediaStream,
-  video: boolean,
-  audio: boolean,
+  filterFunc: FilterTracksFunc,
   enabled: boolean
 ) {
-  const tracks = getTracks(stream, video, audio);
-  tracks.forEach((track) => {
+  getTracks(stream, filterFunc).forEach((track) => {
     // eslint-disable-next-line no-param-reassign
     track.enabled = enabled;
   });

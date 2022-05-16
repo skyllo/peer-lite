@@ -344,9 +344,27 @@ export default class Peer {
   /** Removes the local and remote stream of audio and/or video tracks */
   public removeTracks(video = true, audio = true) {
     removeTracks(this.streamLocal, filterTracksAV(video, audio));
-    if (this.peerConn) {
+    if (!this.isClosed()) {
       // remove tracks from peer connection
       removeTracksFromPeer(this.peerConn, filterTracksAV(video, audio));
+    }
+  }
+
+  public async replaceTrack(track: MediaStreamTrack, trackToReplace: MediaStreamTrack) {
+    if (!this.isClosed()) {
+      const [sender] = this.peerConn
+        .getSenders()
+        .filter((_sender) => _sender.track === trackToReplace);
+      if (sender) {
+        // remove/add track on local stream
+        removeTracks(this.streamLocal, (_track) => _track === trackToReplace);
+        this.streamLocal.addTrack(track);
+        // replace track on peer connection - will error if renegotiation needed
+        await sender.replaceTrack(track);
+        this.emit('streamLocal', this.streamLocal);
+      } else {
+        this.error(`Failed to find track to replace: ${trackToReplace.id}`);
+      }
     }
   }
 

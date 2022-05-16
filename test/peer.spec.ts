@@ -146,6 +146,84 @@ test('should emit both peers remote streams', async ({ page }) => {
   );
 });
 
+test('should replace track on peer', async ({ page }) => {
+  await page.evaluate(
+    () =>
+      new Promise<void>(async (resolve, reject) => {
+        const peer1 = getPeer({ name: 'peer1' });
+        const peer2 = getPeer({ name: 'peer2' });
+
+        const stream = await window.Peer.getUserMedia();
+        const stream2 = await window.Peer.getUserMedia();
+
+        let remoteCount = 0;
+        peer1.on('streamRemote', async () => {
+          remoteCount += 1;
+          if (remoteCount === 1) {
+            const newTrack = stream2.getTracks()[0];
+            const oldTrack = peer1.get().getSenders()[0].track;
+            if (oldTrack) {
+              try {
+                await peer1.replaceTrack(newTrack, oldTrack);
+                const hasNewTrack = peer1
+                  .get()
+                  .getSenders()
+                  .filter((sender) => sender.track === newTrack);
+                if (hasNewTrack) {
+                  resolve();
+                } else {
+                  reject();
+                }
+              } catch (err) {
+                reject(err);
+              }
+            }
+          }
+        });
+
+        setupPeers(peer1, peer2, stream);
+        peer1.start();
+      })
+  );
+});
+
+test('should fail to replace track on peer', async ({ page }) => {
+  await page.evaluate(
+    () =>
+      new Promise<void>(async (resolve, reject) => {
+        const peer1 = getPeer({ name: 'peer1' });
+        const peer2 = getPeer({ name: 'peer2' });
+
+        const stream = await window.Peer.getUserMedia();
+        const stream2 = await navigator.mediaDevices.getDisplayMedia();
+
+        let remoteCount = 0;
+        peer1.on('streamRemote', async () => {
+          remoteCount += 1;
+          if (remoteCount === 1) {
+            const newTrack = stream2.getTracks()[0];
+            const oldTrack = peer1.get().getSenders()[0].track;
+            if (oldTrack) {
+              try {
+                await peer1.replaceTrack(newTrack, oldTrack);
+              } catch (err) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                if (err.name === 'InvalidModificationError') {
+                  resolve();
+                } else {
+                  reject(err);
+                }
+              }
+            }
+          }
+        });
+
+        setupPeers(peer1, peer2, stream);
+        peer1.start();
+      })
+  );
+});
+
 test('should renegotiate the connection when adding a new stream', async ({ page }) => {
   await page.evaluate(
     () =>

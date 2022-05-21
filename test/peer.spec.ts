@@ -70,6 +70,29 @@ test('should set the local stream and be active', async ({ page }) => {
   expect(isStreamLocalActive).toEqual(true);
 });
 
+test('should start peer if called twice afters listeners added', async ({ page }) => {
+  await page.evaluate(
+    () =>
+      new Promise<void>(async (resolve) => {
+        const peer1 = getPeer({ name: 'peer1' });
+        const peer2 = getPeer({ name: 'peer2' });
+
+        peer1.start();
+        peer2.start({ polite: false });
+
+        const stream = await window.Peer.getUserMedia();
+
+        peer1.on('connected', () => {
+          resolve();
+        });
+
+        setupPeers(peer1, peer2, stream);
+        peer1.start();
+        peer2.start({ polite: false });
+      })
+  );
+});
+
 test('should remove tracks from local stream peer', async ({ page }) => {
   const isNoTracks = await page.evaluate(async () => {
     const stream = await window.Peer.getUserMedia();
@@ -274,7 +297,7 @@ test('should connect two peers that make an offer simultaneously when one is pol
         });
 
         setupPeers(peer1, peer2, stream);
-        peer1.start({ polite: true });
+        peer1.start({ polite: false });
         peer2.start();
       })
   );

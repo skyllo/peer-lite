@@ -10,6 +10,8 @@ import {
   setTracksEnabled,
 } from './utils';
 
+const POLITE_DEFAULT_VALUE = true;
+
 export default class Peer {
   private peerConn: RTCPeerConnection;
 
@@ -19,7 +21,7 @@ export default class Peer {
 
   private readonly emitter = new EventEmitter() as TypedEmitter<PeerEvents>;
 
-  private polite = true;
+  private polite = POLITE_DEFAULT_VALUE;
 
   private makingOffer = false;
 
@@ -165,8 +167,12 @@ export default class Peer {
     return this.peerConn;
   }
 
-  public start({ polite = false }: { polite?: boolean } = {}) {
+  public start({ polite = POLITE_DEFAULT_VALUE }: { polite?: boolean } = {}) {
     try {
+      // reset peer if only local offer is set
+      if (this.peerConn?.signalingState === 'have-local-offer') {
+        this.destroy();
+      }
       if (this.isClosed()) {
         this.init();
       }
@@ -209,7 +215,7 @@ export default class Peer {
           this.emit('signal', this.peerConn.localDescription);
         }
       }
-      this.polite = true;
+      this.polite = POLITE_DEFAULT_VALUE;
     } catch (err) {
       this.error('Failed to set local/remote descriptions', err);
     }
@@ -282,7 +288,7 @@ export default class Peer {
   /** Closes any active peer connection */
   public destroy() {
     if (!this.isClosed()) {
-      this.polite = true;
+      this.polite = POLITE_DEFAULT_VALUE;
       this.makingOffer = false;
       this.ignoreOffer = false;
       this.peerConn.close();

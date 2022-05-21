@@ -266,7 +266,10 @@ export default class Peer {
   private addDataChannel(channel: RTCDataChannel) {
     // setup data channel events
     channel.onopen = () => this.emit('channelOpen', { channel });
-    channel.onerror = (error: RTCErrorEvent) => this.emit('channelError', { channel, error });
+    channel.onerror = (ev: Event) => {
+      const event = ev as RTCErrorEvent;
+      this.emit('channelError', { channel, event });
+    };
     channel.onclose = () => {
       this.channels.delete(channel.label);
       this.emit('channelClosed', { channel });

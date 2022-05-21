@@ -27,7 +27,7 @@ export interface PeerEvents {
   // RTCDataChannel
   channelOpen: (data: { channel: RTCDataChannel }) => void;
   channelClosed: (data: { channel: RTCDataChannel }) => void;
-  channelError: (data: { channel: RTCDataChannel; error: RTCErrorEvent }) => void;
+  channelError: (data: { channel: RTCDataChannel; event: RTCErrorEvent }) => void;
   channelData: (data: {
     channel: RTCDataChannel;
     source: 'incoming' | 'outgoing';

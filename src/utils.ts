@@ -20,7 +20,7 @@ export function randomHex(n: number) {
 
 export const filterTracksAV =
   (video: boolean, audio: boolean): FilterTracksFunc =>
-  (track: MediaStreamTrack) => {
+  (track) => {
     const isVideo = video && track?.kind === 'video';
     const isAudio = audio && track?.kind === 'audio';
     return isVideo || isAudio;

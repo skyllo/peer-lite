@@ -7,6 +7,8 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "stripInternal": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
     "strictNullChecks": true,
     "esModuleInterop": true,
     "outDir": "dist",

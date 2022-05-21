@@ -16,27 +16,29 @@ interface Props {
   id: string;
   className?: string;
   muted: boolean;
-  stream: MediaStream;
+  stream: MediaStream | null;
 }
 
 export default function CamVideo(props: Props) {
   const { className = '', id, muted, stream } = props;
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement>();
 
   useEffect(() => {
     const wrapper = document.getElementById(id);
     const videoElement = document.createElement('video');
     videoElement.setAttribute('autoplay', '');
-    wrapper.appendChild(videoElement);
+    wrapper?.appendChild(videoElement);
     videoRef.current = videoElement;
   }, []);
 
   useEffect(() => {
-    videoRef.current.muted = muted;
+    if (videoRef.current) {
+      videoRef.current.muted = muted;
+    }
   }, [muted]);
 
   useEffect(() => {
-    const videoEl: HTMLVideoElement = videoRef.current;
+    const videoEl = videoRef.current;
     if (videoEl) {
       // set video stream
       videoEl.srcObject = stream;

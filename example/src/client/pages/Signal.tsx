@@ -36,18 +36,20 @@ const SignalStyled = styled.div`
 `;
 
 export default function Signal() {
-  const [streamLocal, setStreamLocal] = useState<MediaStream>();
-  const [streamRemote, setStreamRemote] = useState<MediaStream>();
+  const [streamLocal, setStreamLocal] = useState<MediaStream | null>(null);
+  const [streamRemote, setStreamRemote] = useState<MediaStream | null>(null);
   const peer = useCreatePeer({ enableDataChannels: true, channelName: 'messages' });
   const socket = useCreateSocket();
 
   // socket handlers
   useSocket(socket, 'onicecandidates', async ({ candidates }) => {
+    // eslint-disable-next-line
     const promises = candidates.map(async (candidate) => peer.addIceCandidate(candidate));
     await Promise.all(promises);
   });
 
   useSocket(socket, 'signal', async ({ description }) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (description.type === 'offer') {
       peer.destroy();
     }

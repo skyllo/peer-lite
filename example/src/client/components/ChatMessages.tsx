@@ -46,7 +46,7 @@ interface Props {
 
 export default function ChatMessages(props: Props) {
   const { className, peer, socket } = props;
-  const myRef = useRef<HTMLDivElement>();
+  const myRef = useRef<HTMLDivElement>(null);
   const [messages, dispatchMessage] = useReducer(
     (state: Message[], action: { message: Message; type: string }) => {
       switch (action.type) {
@@ -63,7 +63,9 @@ export default function ChatMessages(props: Props) {
 
   useEffect(() => {
     const elem = myRef.current;
-    elem.scrollTop = elem.scrollHeight;
+    if (elem) {
+      elem.scrollTop = elem.scrollHeight;
+    }
   }, [myRef, messages.length]);
 
   function addMessage(message: string, from: string) {
@@ -105,7 +107,7 @@ export default function ChatMessages(props: Props) {
   });
 
   usePeer(peer, 'error', ({ name, error }) => {
-    addMessage(`${name} - ${error.message}`, 'error');
+    addMessage(`${name} - ${error!.message}`, 'error');
   });
 
   return (

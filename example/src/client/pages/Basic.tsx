@@ -23,8 +23,8 @@ const BasicStyled = styled.div`
 `;
 
 export default function Basic() {
-  const [streamLocal, setStreamLocal] = useState<MediaStream>();
-  const [streamRemote, setStreamRemote] = useState<MediaStream>();
+  const [streamLocal, setStreamLocal] = useState<MediaStream | null>(null);
+  const [streamRemote, setStreamRemote] = useState<MediaStream | null>(null);
   const peer1 = useCreatePeer();
   const peer2 = useCreatePeer();
 

@@ -12,7 +12,7 @@ export function useCreatePeer(options: PeerOptions = {}): Peer {
 
   useEffect(
     () => () => {
-      peerRef.current.destroy();
+      peerRef.current?.destroy();
     },
     []
   );
@@ -38,7 +38,7 @@ export function useCreateSocket(): Socket {
 
   useEffect(
     () => () => {
-      socketRef.current.disconnect();
+      socketRef.current?.disconnect();
     },
     []
   );

@@ -14,6 +14,7 @@ const config: RollupOptions = {
 };
 
 test.beforeEach(async ({ page }) => {
+  if (!Array.isArray(config.output)) return;
   // generate code from rollup
   const bundle = await rollup(config);
   const { output } = await bundle.generate(config.output?.[0]);
@@ -63,8 +64,8 @@ test('should set the local stream and be active', async ({ page }) => {
   const isStreamLocalActive = await page.evaluate(async () => {
     const stream = await window.Peer.getUserMedia();
     const peer = getPeer();
-    const streamLocal = peer.addStream(stream);
-    return streamLocal.active;
+    peer.addStream(stream);
+    return peer.getStreamLocal().active;
   });
 
   expect(isStreamLocalActive).toEqual(true);
@@ -119,26 +120,15 @@ test('should not reset a new connection', async ({ page }) => {
   expect(isEqual).toEqual(true);
 });
 
-test('should reset an stable connection', async ({ page }) => {
-  const isEqual = await page.evaluate(
-    () =>
-      new Promise(async (resolve) => {
-        const peer1 = getPeer({ name: 'peer1' });
-        const peer2 = getPeer({ name: 'peer2' });
-
-        const stream = await window.Peer.getUserMedia();
-
-        peer2.on('connected', () => {
-          const p1 = peer2.get();
-          peer2.init();
-          const p2 = peer2.get();
-          resolve(p1 !== p2);
-        });
-
-        setupPeers(peer1, peer2, stream);
-        peer1.start();
-      })
-  );
+test('should reset a destroyed connection', async ({ page }) => {
+  const isEqual = await page.evaluate(() => {
+    const peer = getPeer();
+    const p1 = peer.get();
+    peer.destroy();
+    peer.init();
+    const p2 = peer.get();
+    return p1 !== p2;
+  });
 
   expect(isEqual).toEqual(true);
 });
@@ -231,7 +221,7 @@ test('should fail to replace track on peer', async ({ page }) => {
                 await peer1.replaceTrack(newTrack, oldTrack);
               } catch (err) {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                if (err.name === 'InvalidModificationError') {
+                if (err instanceof Error && err.name === 'InvalidModificationError') {
                   resolve();
                 } else {
                   reject(err);
@@ -375,6 +365,45 @@ test('should send data to other peer using data channels', async ({ page }) => {
   );
 });
 
+test('should send data to other peer using dynamic data channels', async ({ page }) => {
+  await page.evaluate(
+    () =>
+      new Promise<void>(async (resolve, reject) => {
+        const peer1 = getPeer({
+          name: 'peer1',
+          enableDataChannels: true,
+        });
+        const peer2 = getPeer({
+          name: 'peer2',
+          enableDataChannels: true,
+        });
+
+        const stream = await window.Peer.getUserMedia();
+
+        peer1.on('connected', () => {
+          peer1.addDataChannel('test');
+        });
+
+        peer1.on('channelOpen', () => {
+          setTimeout(() => {
+            peer2.send('hello world', 'test');
+          }, 500);
+        });
+
+        peer1.on('channelData', ({ channel, data, source }) => {
+          if (channel.label === 'test' && data === 'hello world' && source === 'incoming') {
+            resolve();
+          } else {
+            reject(new Error('did not get correct channel data'));
+          }
+        });
+
+        setupPeers(peer1, peer2, stream);
+        peer1.start();
+      })
+  );
+});
+
 test('should send data to other peer then close using negotiated data channels', async ({
   page,
 }) => {
@@ -384,28 +413,28 @@ test('should send data to other peer then close using negotiated data channels',
         const peer1 = getPeer({ name: 'peer1', enableDataChannels: true });
         const peer2 = getPeer({ name: 'peer2', enableDataChannels: true });
 
+        peer1.addDataChannel('extraMessages', { negotiated: true, id: 0 });
+        peer2.addDataChannel('extraMessages', { negotiated: true, id: 0 });
+
         const stream = await window.Peer.getUserMedia();
 
         peer1.on('channelData', ({ data }) => {
           if (data !== 'hello world') {
             reject(new Error('did not get correct channel data'));
           } else {
-            const channel = peer1.getDataChannel();
+            const channel = peer1.getDataChannel('extraMessages');
             channel?.close();
           }
         });
 
-        peer1.on('channelClosed', () => {
-          resolve();
-        });
-
-        peer2.on('connected', () => {
-          peer1.getDataChannel('extraMessages', { negotiated: true, id: 0 });
-          peer2.getDataChannel('extraMessages', { negotiated: true, id: 0 });
-
+        peer2.on('channelOpen', () => {
           setTimeout(() => {
             peer2.send('hello world', 'extraMessages');
           }, 500);
+        });
+
+        peer1.on('channelClosed', () => {
+          resolve();
         });
 
         setupPeers(peer1, peer2, stream);

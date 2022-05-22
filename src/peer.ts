@@ -19,9 +19,13 @@ export default class Peer {
 
   private readonly channels = new Map<string, RTCDataChannel>();
 
+  private readonly channelsPending = new Map<string, RTCDataChannelInit>();
+
   private readonly emitter = new EventEmitter() as TypedEmitter<PeerEvents>;
 
   private polite = POLITE_DEFAULT_VALUE;
+
+  private isActive = false;
 
   private makingOffer = false;
 
@@ -46,6 +50,7 @@ export default class Peer {
   /** Creates a peer instance */
   public constructor(options?: PeerOptions) {
     this.options = { ...this.options, ...options };
+    this.peerConn = this.init();
   }
 
   /** Initializes the peer connection */
@@ -80,7 +85,7 @@ export default class Peer {
         clearTimeout(candidatesId);
         candidates.push(event.candidate);
         // return all candidates if finished gathering
-        if (this.peerConn && this.peerConn.iceGatheringState === 'complete') {
+        if (this.peerConn.iceGatheringState === 'complete') {
           this.emit('onicecandidates', candidates);
         } else {
           // create timeout to return candidates after 200ms
@@ -129,16 +134,21 @@ export default class Peer {
 
     this.peerConn.onnegotiationneeded = async () => {
       try {
+        if (!this.isActive) return;
+
         this.makingOffer = true;
 
         const { channelName, channelOptions, enableDataChannels } = this.options;
         if (enableDataChannels) {
           // create data channel, needed to add "m=application" to SDP
-          this.getDataChannel(channelName, channelOptions);
+          this.addDataChannel(channelName, channelOptions);
         }
 
         const offer = await this.peerConn.createOffer(this.options.offerOptions);
         if (this.peerConn.signalingState !== 'stable') return;
+
+        // add pending data channels
+        this.createDataChannelsPending();
 
         console.log(`${this.options.name}.onnegotiationneeded()`);
         offer.sdp = offer.sdp && this.options.sdpTransform(offer.sdp);
@@ -149,7 +159,9 @@ export default class Peer {
           this.emit('signal', this.peerConn.localDescription);
         }
       } catch (err) {
-        this.error('Failed in negotiation needed', err);
+        if (err instanceof Error) {
+          this.error('Failed in negotiation needed', err);
+        }
       } finally {
         this.makingOffer = false;
       }
@@ -160,7 +172,7 @@ export default class Peer {
       const { channel } = event;
       if (this.options.enableDataChannels) {
         this.channels.set(channel.label, channel);
-        this.addDataChannel(channel);
+        this.addDataChannelEvents(channel);
       }
     };
 
@@ -170,7 +182,7 @@ export default class Peer {
   public start({ polite = POLITE_DEFAULT_VALUE }: { polite?: boolean } = {}) {
     try {
       // reset peer if only local offer is set
-      if (this.peerConn?.signalingState === 'have-local-offer') {
+      if (this.peerConn.signalingState === 'have-local-offer') {
         this.destroy();
       }
       if (this.isClosed()) {
@@ -179,13 +191,15 @@ export default class Peer {
 
       console.log(`${this.options.name}.start()`);
 
+      this.isActive = true;
       this.polite = polite;
 
       // ⚡ triggers "negotiationneeded" event if connected
       this.peerConn.restartIce();
     } catch (err) {
-      this.error('Failed to start', err);
-      throw err;
+      if (err instanceof Error) {
+        this.error('Failed to start', err);
+      }
     }
   }
 
@@ -197,6 +211,7 @@ export default class Peer {
 
       console.log(this.options.name, '<-', description.type);
 
+      this.isActive = true;
       const offerCollision =
         description.type === 'offer' &&
         (this.makingOffer || this.peerConn.signalingState !== 'stable');
@@ -209,6 +224,9 @@ export default class Peer {
 
       await this.peerConn.setRemoteDescription(description);
       if (description.type === 'offer') {
+        // add pending data channels
+        this.createDataChannelsPending();
+
         await this.peerConn.setLocalDescription();
         if (this.peerConn.localDescription) {
           console.log(this.options.name, '->', this.peerConn.localDescription.type);
@@ -217,16 +235,18 @@ export default class Peer {
       }
       this.polite = POLITE_DEFAULT_VALUE;
     } catch (err) {
-      this.error('Failed to set local/remote descriptions', err);
+      if (err instanceof Error) {
+        this.error('Failed to set local/remote descriptions', err);
+      }
     }
   }
 
   public async addIceCandidate(candidate: RTCIceCandidate) {
     try {
       console.log(this.options.name, '<-', 'icecandidate');
-      await this.peerConn?.addIceCandidate(candidate);
+      await this.peerConn.addIceCandidate(candidate);
     } catch (err) {
-      if (!this.ignoreOffer) {
+      if (!this.ignoreOffer && err instanceof Error) {
         this.error('Failed to addIceCandidate', err);
       }
     }
@@ -238,7 +258,7 @@ export default class Peer {
     label: string = this.options.channelName
   ): boolean {
     const channel = this.channels.get(label);
-    if (channel && channel.readyState === 'open' && data) {
+    if (channel?.readyState === 'open' && data) {
       channel.send(data);
       this.emit('channelData', { channel, data, source: 'outgoing' });
       return true;
@@ -246,30 +266,37 @@ export default class Peer {
     return false;
   }
 
-  /** Gets existing open data channels or creates new ones */
-  public getDataChannel(
-    label: string = this.options.channelName,
-    opts: RTCDataChannelInit = {}
-  ): RTCDataChannel | undefined {
+  /** Create a data channel */
+  public addDataChannel(label: string = this.options.channelName, opts: RTCDataChannelInit = {}) {
     if (!this.options.enableDataChannels) {
-      this.error('Failed to createDataChannel as "enableDataChannels" is false');
-      return undefined;
+      this.error('Failed to addDataChannel as "enableDataChannels" is false');
+      return;
     }
     if (this.isClosed()) {
-      this.error('Failed to createDataChannel as peer connection is closed');
-      return undefined;
+      this.error('Failed to addDataChannel as peer connection is closed');
+      return;
     }
-    if (this.channels.has(label)) {
-      return this.channels.get(label);
+    this.channelsPending.set(label, opts);
+    if (this.isActive) {
+      this.createDataChannelsPending();
     }
-    // ⚡ triggers "negotiationneeded" event if connected and no other data channels already added
-    const channel = this.peerConn.createDataChannel(label, opts);
-    this.channels.set(channel.label, channel);
-    this.addDataChannel(channel);
-    return channel;
   }
 
-  private addDataChannel(channel: RTCDataChannel) {
+  public getDataChannel(label: string = this.options.channelName) {
+    return this.channels.get(label);
+  }
+
+  private createDataChannelsPending() {
+    Array.from(this.channelsPending.entries()).forEach(([key, value]) => {
+      // ⚡ triggers "negotiationneeded" event if connected and no other data channels already added
+      const channel = this.peerConn.createDataChannel(key, value);
+      this.channels.set(channel.label, channel);
+      this.addDataChannelEvents(channel);
+    });
+    this.channelsPending.clear();
+  }
+
+  private addDataChannelEvents(channel: RTCDataChannel) {
     // setup data channel events
     channel.onopen = () => this.emit('channelOpen', { channel });
     channel.onerror = (ev: Event) => {
@@ -289,8 +316,10 @@ export default class Peer {
   public destroy() {
     if (!this.isClosed()) {
       this.polite = POLITE_DEFAULT_VALUE;
+      this.isActive = false;
       this.makingOffer = false;
       this.ignoreOffer = false;
+      this.channelsPending.clear();
       this.peerConn.close();
       console.log(`${this.options.name}.disconnected()`);
       this.emit('disconnected');
@@ -335,10 +364,10 @@ export default class Peer {
         this.removeTracks(true, true);
       }
       stream.getTracks().forEach((track) => this.addTrack(track));
-      return this.streamLocal;
     } catch (err) {
-      this.error('Failed to set local stream', err);
-      throw err;
+      if (err instanceof Error) {
+        this.error('Failed to set local stream', err);
+      }
     }
   }
 
@@ -346,8 +375,10 @@ export default class Peer {
   public addTrack(track: MediaStreamTrack) {
     this.streamLocal.addTrack(track);
     this.emit('streamLocal', this.streamLocal);
-    // ⚡ triggers "negotiationneeded" event if connected
-    this.peerConn?.addTrack(track, this.streamLocal);
+    if (!this.isClosed()) {
+      // ⚡ triggers "negotiationneeded" event if connected
+      this.peerConn.addTrack(track, this.streamLocal);
+    }
   }
 
   /** Removes the local and remote stream of audio and/or video tracks */

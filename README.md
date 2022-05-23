@@ -5,7 +5,7 @@
 Lightweight WebRTC browser library that supports video, audio and data channels.
 
 # Features
-* Lightweight! 7kb in size (< 3kb gzip)
+* Lightweight! 8kb in size (< 3kb gzip)
 * Zero dependencies
 * Using modern WebRTC APIs with TypeScript Types
 * ["Perfect negotiation"](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation) pattern

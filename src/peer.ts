@@ -138,7 +138,7 @@ export default class Peer {
 
         const { channelName, channelOptions, enableDataChannels } = this.options;
         if (enableDataChannels) {
-          // create data channel, needed to add "m=application" to SDP
+          // create data channel to add "m=application" to SDP
           this.addDataChannel(channelName, channelOptions);
         }
 
@@ -166,7 +166,7 @@ export default class Peer {
     };
 
     this.peer.ondatachannel = (event) => {
-      // called for in-band negotiated data channels
+      // called for in-band non-negotiated data channels
       const { channel } = event;
       if (this.options.enableDataChannels) {
         this.channels.set(channel.label, channel);
@@ -177,6 +177,7 @@ export default class Peer {
     return this.peer;
   }
 
+  /** Starts the RTCPeerConnection signalling */
   public start({ polite = POLITE_DEFAULT_VALUE }: { polite?: boolean } = {}) {
     try {
       // reset peer if only local offer is set
@@ -201,6 +202,7 @@ export default class Peer {
     }
   }
 
+  /** Process a RTCSessionDescriptionInit on peer */
   public async signal(description: RTCSessionDescriptionInit) {
     try {
       if (this.isClosed()) {
@@ -263,7 +265,7 @@ export default class Peer {
     return false;
   }
 
-  /** Create a data channel */
+  /** Add an RTCDataChannel to peer */
   public addDataChannel(label: string = this.options.channelName, opts: RTCDataChannelInit = {}) {
     if (!this.options.enableDataChannels) {
       this.error('Failed to addDataChannel as "enableDataChannels" is false');
@@ -279,6 +281,7 @@ export default class Peer {
     }
   }
 
+  /** Get an RTCDataChannel added to peer */
   public getDataChannel(label: string = this.options.channelName) {
     return this.channels.get(label);
   }
@@ -323,7 +326,7 @@ export default class Peer {
     }
   }
 
-  /** Returns the ICEConnectionState of the peer connection */
+  /** Returns the ICEConnectionState of the peer */
   public status(): RTCIceConnectionState {
     return this.peer?.iceConnectionState ?? 'closed';
   }
@@ -338,11 +341,12 @@ export default class Peer {
     return this.status() === 'closed';
   }
 
-  /** Returns RTCPeerConnection */
+  /** Returns the peer RTCPeerConnection */
   public get() {
     return this.peer;
   }
 
+  /** Get local stream */
   public getStreamLocal() {
     return this.streamLocal;
   }
@@ -387,6 +391,7 @@ export default class Peer {
     }
   }
 
+  /** Replace track with another track on peer */
   public async replaceTrack(track: MediaStreamTrack, trackToReplace: MediaStreamTrack) {
     if (!this.isClosed()) {
       const [sender] = this.peer.getSenders().filter((_sender) => _sender.track === trackToReplace);

@@ -26,7 +26,7 @@ export const filterTracksAV =
     return isVideo || isAudio;
   };
 
-function getTracks(stream: MediaStream, filterFunc: FilterTracksFunc): MediaStreamTrack[] {
+function getTracks(stream: MediaStream, filterFunc: FilterTracksFunc) {
   return stream.getTracks().filter(filterFunc);
 }
 

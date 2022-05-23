@@ -6,7 +6,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: cimg/node:17.7.2-browsers
+      - image: cimg/node:18.2.0-browsers
 
     working_directory: ~/repo
 

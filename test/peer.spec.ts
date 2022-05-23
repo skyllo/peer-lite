@@ -214,14 +214,18 @@ test('should fail to replace track on peer', async ({ page }) => {
         peer1.on('streamRemote', async () => {
           remoteCount += 1;
           if (remoteCount === 1) {
-            const newTrack = stream2.getTracks()[0];
-            const oldTrack = peer1.get().getSenders()[0].track;
+            const [newTrack] = stream2.getTracks().filter((track) => track.kind === 'audio');
+            const [oldTrack] = peer1
+              .get()
+              .getSenders()
+              .map((sender) => sender.track)
+              .filter((track) => track?.kind === 'video');
             if (oldTrack) {
               try {
                 await peer1.replaceTrack(newTrack, oldTrack);
               } catch (err) {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                if (err instanceof Error && err.name === 'InvalidModificationError') {
+                if (err instanceof Error && err.name === 'TypeError') {
                   resolve();
                 } else {
                   reject(err);

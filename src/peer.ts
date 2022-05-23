@@ -13,7 +13,7 @@ import {
 const POLITE_DEFAULT_VALUE = true;
 
 export default class Peer {
-  private peerConn: RTCPeerConnection;
+  private peer: RTCPeerConnection;
 
   private readonly streamLocal: MediaStream = new MediaStream();
 
@@ -50,23 +50,21 @@ export default class Peer {
   /** Creates a peer instance */
   public constructor(options?: PeerOptions) {
     this.options = { ...this.options, ...options };
-    this.peerConn = this.init();
+    this.peer = this.init();
   }
 
   /** Initializes the peer connection */
   public init(): RTCPeerConnection {
     // do not reset connection if a new one already exists
     if (this.status() === 'new') {
-      return this.peerConn;
+      return this.peer;
     }
     // close any existing active peer connections
     this.destroy();
     // create peer connection
-    this.peerConn = new RTCPeerConnection(this.options.config);
+    this.peer = new RTCPeerConnection(this.options.config);
     // ⚡ triggers "negotiationneeded" event if connected
-    this.streamLocal
-      .getTracks()
-      .forEach((track) => this.peerConn.addTrack(track, this.streamLocal));
+    this.streamLocal.getTracks().forEach((track) => this.peer.addTrack(track, this.streamLocal));
 
     // setup peer connection events
     const candidates: RTCIceCandidate[] = [];
@@ -77,7 +75,7 @@ export default class Peer {
       candidates.length = 0;
     }
 
-    this.peerConn.onicecandidate = (event) => {
+    this.peer.onicecandidate = (event) => {
       if (!event || !event.candidate) return;
       // if batching candidates then setup timeouts
       if (this.options.batchCandidates) {
@@ -85,7 +83,7 @@ export default class Peer {
         clearTimeout(candidatesId);
         candidates.push(event.candidate);
         // return all candidates if finished gathering
-        if (this.peerConn.iceGatheringState === 'complete') {
+        if (this.peer.iceGatheringState === 'complete') {
           this.emit('onicecandidates', candidates);
         } else {
           // create timeout to return candidates after 200ms
@@ -102,13 +100,13 @@ export default class Peer {
       }
     };
 
-    this.peerConn.ontrack = (event) => {
+    this.peer.ontrack = (event) => {
       if (event.streams) {
         this.emit('streamRemote', event.streams[0]);
       }
     };
 
-    this.peerConn.oniceconnectionstatechange = () => {
+    this.peer.oniceconnectionstatechange = () => {
       this.emit('status', this.status());
       switch (this.status()) {
         case 'closed':
@@ -132,7 +130,7 @@ export default class Peer {
       }
     };
 
-    this.peerConn.onnegotiationneeded = async () => {
+    this.peer.onnegotiationneeded = async () => {
       try {
         if (!this.isActive) return;
 
@@ -144,19 +142,19 @@ export default class Peer {
           this.addDataChannel(channelName, channelOptions);
         }
 
-        const offer = await this.peerConn.createOffer(this.options.offerOptions);
-        if (this.peerConn.signalingState !== 'stable') return;
+        const offer = await this.peer.createOffer(this.options.offerOptions);
+        if (this.peer.signalingState !== 'stable') return;
 
         // add pending data channels
-        this.createDataChannelsPending();
+        this.createDataChannels();
 
         console.log(`${this.options.name}.onnegotiationneeded()`);
         offer.sdp = offer.sdp && this.options.sdpTransform(offer.sdp);
-        await this.peerConn.setLocalDescription(offer);
+        await this.peer.setLocalDescription(offer);
 
-        if (this.peerConn.localDescription) {
+        if (this.peer.localDescription) {
           console.log(this.options.name, '->', offer.type);
-          this.emit('signal', this.peerConn.localDescription);
+          this.emit('signal', this.peer.localDescription);
         }
       } catch (err) {
         if (err instanceof Error) {
@@ -167,7 +165,7 @@ export default class Peer {
       }
     };
 
-    this.peerConn.ondatachannel = (event) => {
+    this.peer.ondatachannel = (event) => {
       // called for in-band negotiated data channels
       const { channel } = event;
       if (this.options.enableDataChannels) {
@@ -176,13 +174,13 @@ export default class Peer {
       }
     };
 
-    return this.peerConn;
+    return this.peer;
   }
 
   public start({ polite = POLITE_DEFAULT_VALUE }: { polite?: boolean } = {}) {
     try {
       // reset peer if only local offer is set
-      if (this.peerConn.signalingState === 'have-local-offer') {
+      if (this.peer.signalingState === 'have-local-offer') {
         this.destroy();
       }
       if (this.isClosed()) {
@@ -195,7 +193,7 @@ export default class Peer {
       this.polite = polite;
 
       // ⚡ triggers "negotiationneeded" event if connected
-      this.peerConn.restartIce();
+      this.peer.restartIce();
     } catch (err) {
       if (err instanceof Error) {
         this.error('Failed to start', err);
@@ -213,8 +211,7 @@ export default class Peer {
 
       this.isActive = true;
       const offerCollision =
-        description.type === 'offer' &&
-        (this.makingOffer || this.peerConn.signalingState !== 'stable');
+        description.type === 'offer' && (this.makingOffer || this.peer.signalingState !== 'stable');
 
       this.ignoreOffer = !this.polite && offerCollision;
       if (this.ignoreOffer) {
@@ -222,15 +219,15 @@ export default class Peer {
         return;
       }
 
-      await this.peerConn.setRemoteDescription(description);
+      await this.peer.setRemoteDescription(description);
       if (description.type === 'offer') {
         // add pending data channels
-        this.createDataChannelsPending();
+        this.createDataChannels();
 
-        await this.peerConn.setLocalDescription();
-        if (this.peerConn.localDescription) {
-          console.log(this.options.name, '->', this.peerConn.localDescription.type);
-          this.emit('signal', this.peerConn.localDescription);
+        await this.peer.setLocalDescription();
+        if (this.peer.localDescription) {
+          console.log(this.options.name, '->', this.peer.localDescription.type);
+          this.emit('signal', this.peer.localDescription);
         }
       }
       this.polite = POLITE_DEFAULT_VALUE;
@@ -244,7 +241,7 @@ export default class Peer {
   public async addIceCandidate(candidate: RTCIceCandidate) {
     try {
       console.log(this.options.name, '<-', 'icecandidate');
-      await this.peerConn.addIceCandidate(candidate);
+      await this.peer.addIceCandidate(candidate);
     } catch (err) {
       if (!this.ignoreOffer && err instanceof Error) {
         this.error('Failed to addIceCandidate', err);
@@ -278,7 +275,7 @@ export default class Peer {
     }
     this.channelsPending.set(label, opts);
     if (this.isActive) {
-      this.createDataChannelsPending();
+      this.createDataChannels();
     }
   }
 
@@ -286,10 +283,10 @@ export default class Peer {
     return this.channels.get(label);
   }
 
-  private createDataChannelsPending() {
+  private createDataChannels() {
     Array.from(this.channelsPending.entries()).forEach(([key, value]) => {
       // ⚡ triggers "negotiationneeded" event if connected and no other data channels already added
-      const channel = this.peerConn.createDataChannel(key, value);
+      const channel = this.peer.createDataChannel(key, value);
       this.channels.set(channel.label, channel);
       this.addDataChannelEvents(channel);
     });
@@ -320,7 +317,7 @@ export default class Peer {
       this.makingOffer = false;
       this.ignoreOffer = false;
       this.channelsPending.clear();
-      this.peerConn.close();
+      this.peer.close();
       console.log(`${this.options.name}.disconnected()`);
       this.emit('disconnected');
     }
@@ -328,7 +325,7 @@ export default class Peer {
 
   /** Returns the ICEConnectionState of the peer connection */
   public status(): RTCIceConnectionState {
-    return this.peerConn?.iceConnectionState ?? 'closed';
+    return this.peer?.iceConnectionState ?? 'closed';
   }
 
   /** Returns true if the peer is connected */
@@ -343,7 +340,7 @@ export default class Peer {
 
   /** Returns RTCPeerConnection */
   public get() {
-    return this.peerConn;
+    return this.peer;
   }
 
   public getStreamLocal() {
@@ -377,7 +374,7 @@ export default class Peer {
     this.emit('streamLocal', this.streamLocal);
     if (!this.isClosed()) {
       // ⚡ triggers "negotiationneeded" event if connected
-      this.peerConn.addTrack(track, this.streamLocal);
+      this.peer.addTrack(track, this.streamLocal);
     }
   }
 
@@ -386,15 +383,13 @@ export default class Peer {
     removeTracks(this.streamLocal, filterTracksAV(video, audio));
     if (!this.isClosed()) {
       // remove tracks from peer connection
-      removeTracksFromPeer(this.peerConn, filterTracksAV(video, audio));
+      removeTracksFromPeer(this.peer, filterTracksAV(video, audio));
     }
   }
 
   public async replaceTrack(track: MediaStreamTrack, trackToReplace: MediaStreamTrack) {
     if (!this.isClosed()) {
-      const [sender] = this.peerConn
-        .getSenders()
-        .filter((_sender) => _sender.track === trackToReplace);
+      const [sender] = this.peer.getSenders().filter((_sender) => _sender.track === trackToReplace);
       if (sender) {
         // remove/add track on local stream
         removeTracks(this.streamLocal, (_track) => _track === trackToReplace);

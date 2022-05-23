@@ -1,6 +1,8 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { PlaywrightTestConfig, devices } from '@playwright/test';
 
+const isCircleCI = process.env.CI;
+
 const config: PlaywrightTestConfig = {
   workers: 1,
   timeout: 10 * 1000,
@@ -25,10 +27,14 @@ const config: PlaywrightTestConfig = {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
+    ...(isCircleCI
+      ? [
+          {
+            name: 'firefox',
+            use: { ...devices['Desktop Firefox'] },
+          },
+        ]
+      : []),
   ],
   webServer: {
     command: 'node test/__setup__/server.js',

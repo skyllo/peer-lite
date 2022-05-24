@@ -136,20 +136,21 @@ export default class Peer {
 
         this.makingOffer = true;
 
-        const { channelName, channelOptions, enableDataChannels } = this.options;
+        const { channelName, channelOptions, enableDataChannels, offerOptions, sdpTransform } =
+          this.options;
         if (enableDataChannels) {
           // create data channel to add "m=application" to SDP
           this.addDataChannel(channelName, channelOptions);
         }
 
-        const offer = await this.peer.createOffer(this.options.offerOptions);
+        const offer = await this.peer.createOffer(offerOptions);
         if (this.peer.signalingState !== 'stable') return;
 
         // add pending data channels
         this.createDataChannels();
 
         console.log(`${this.options.name}.onnegotiationneeded()`);
-        offer.sdp = offer.sdp && this.options.sdpTransform(offer.sdp);
+        offer.sdp = offer.sdp && sdpTransform(offer.sdp);
         await this.peer.setLocalDescription(offer);
 
         if (this.peer.localDescription) {
@@ -404,21 +405,19 @@ export default class Peer {
   }
 
   /** Replace track with another track on peer */
-  public async replaceTrack(track: MediaStreamTrack, trackToReplace: MediaStreamTrack) {
+  public async replaceTrack(track: MediaStreamTrack, newTrack: MediaStreamTrack) {
     try {
       if (!this.isClosed()) {
-        const [sender] = this.peer
-          .getSenders()
-          .filter((_sender) => _sender.track === trackToReplace);
+        const [sender] = this.peer.getSenders().filter((_sender) => _sender.track === newTrack);
         if (sender) {
           // remove/add track on local stream
-          removeTracks(this.streamLocal, (_track) => _track === trackToReplace);
+          removeTracks(this.streamLocal, (_track) => _track === newTrack);
           this.streamLocal.addTrack(track);
           // replace track on peer connection - will error if renegotiation needed
           await sender.replaceTrack(track);
           this.emit('streamLocal', this.streamLocal);
         } else {
-          this.error(`Failed to find track to replace: ${trackToReplace.id}`);
+          this.error(`Failed to find track to replace: ${newTrack.id}`);
         }
       }
     } catch (err) {

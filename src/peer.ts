@@ -158,7 +158,7 @@ export default class Peer {
         }
       } catch (err) {
         if (err instanceof Error) {
-          this.error('Failed in negotiation needed', err);
+          this.error('Failed in negotiationNeeded', err);
         }
       } finally {
         this.makingOffer = false;
@@ -198,6 +198,7 @@ export default class Peer {
     } catch (err) {
       if (err instanceof Error) {
         this.error('Failed to start', err);
+        throw err;
       }
     }
   }
@@ -235,11 +236,13 @@ export default class Peer {
       this.polite = POLITE_DEFAULT_VALUE;
     } catch (err) {
       if (err instanceof Error) {
-        this.error('Failed to set local/remote descriptions', err);
+        this.error('Failed to signal', err);
+        throw err;
       }
     }
   }
 
+  /** Add RTCIceCandidate to peer */
   public async addIceCandidate(candidate: RTCIceCandidate) {
     try {
       console.log(this.options.name, '<-', 'icecandidate');
@@ -247,6 +250,7 @@ export default class Peer {
     } catch (err) {
       if (!this.ignoreOffer && err instanceof Error) {
         this.error('Failed to addIceCandidate', err);
+        throw err;
       }
     }
   }
@@ -287,13 +291,20 @@ export default class Peer {
   }
 
   private createDataChannels() {
-    Array.from(this.channelsPending.entries()).forEach(([key, value]) => {
-      // ⚡ triggers "negotiationneeded" event if connected and no other data channels already added
-      const channel = this.peer.createDataChannel(key, value);
-      this.channels.set(channel.label, channel);
-      this.addDataChannelEvents(channel);
-    });
-    this.channelsPending.clear();
+    try {
+      Array.from(this.channelsPending.entries()).forEach(([key, value]) => {
+        // ⚡ triggers "negotiationneeded" event if connected and no other data channels already added
+        const channel = this.peer.createDataChannel(key, value);
+        this.channels.set(channel.label, channel);
+        this.addDataChannelEvents(channel);
+      });
+      this.channelsPending.clear();
+    } catch (err) {
+      if (err instanceof Error) {
+        this.error('Failed to createDataChannels', err);
+        throw err;
+      }
+    }
   }
 
   private addDataChannelEvents(channel: RTCDataChannel) {
@@ -360,25 +371,26 @@ export default class Peer {
 
   /** Add a stream to the local stream */
   public addStream(stream: MediaStream, replace = true) {
-    try {
-      if (replace) {
-        this.removeTracks(true, true);
-      }
-      stream.getTracks().forEach((track) => this.addTrack(track));
-    } catch (err) {
-      if (err instanceof Error) {
-        this.error('Failed to set local stream', err);
-      }
+    if (replace) {
+      this.removeTracks(true, true);
     }
+    stream.getTracks().forEach((track) => this.addTrack(track));
   }
 
   /** Add a track to the local stream */
   public addTrack(track: MediaStreamTrack) {
-    this.streamLocal.addTrack(track);
-    this.emit('streamLocal', this.streamLocal);
-    if (!this.isClosed()) {
-      // ⚡ triggers "negotiationneeded" event if connected
-      this.peer.addTrack(track, this.streamLocal);
+    try {
+      this.streamLocal.addTrack(track);
+      this.emit('streamLocal', this.streamLocal);
+      if (!this.isClosed()) {
+        // ⚡ triggers "negotiationneeded" event if connected
+        this.peer.addTrack(track, this.streamLocal);
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        this.error('Failed to addTrack', err);
+        throw err;
+      }
     }
   }
 
@@ -393,17 +405,26 @@ export default class Peer {
 
   /** Replace track with another track on peer */
   public async replaceTrack(track: MediaStreamTrack, trackToReplace: MediaStreamTrack) {
-    if (!this.isClosed()) {
-      const [sender] = this.peer.getSenders().filter((_sender) => _sender.track === trackToReplace);
-      if (sender) {
-        // remove/add track on local stream
-        removeTracks(this.streamLocal, (_track) => _track === trackToReplace);
-        this.streamLocal.addTrack(track);
-        // replace track on peer connection - will error if renegotiation needed
-        await sender.replaceTrack(track);
-        this.emit('streamLocal', this.streamLocal);
-      } else {
-        this.error(`Failed to find track to replace: ${trackToReplace.id}`);
+    try {
+      if (!this.isClosed()) {
+        const [sender] = this.peer
+          .getSenders()
+          .filter((_sender) => _sender.track === trackToReplace);
+        if (sender) {
+          // remove/add track on local stream
+          removeTracks(this.streamLocal, (_track) => _track === trackToReplace);
+          this.streamLocal.addTrack(track);
+          // replace track on peer connection - will error if renegotiation needed
+          await sender.replaceTrack(track);
+          this.emit('streamLocal', this.streamLocal);
+        } else {
+          this.error(`Failed to find track to replace: ${trackToReplace.id}`);
+        }
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        this.error('Failed to replaceTrack', err);
+        throw err;
       }
     }
   }

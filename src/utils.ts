@@ -34,9 +34,9 @@ export function removeTracks(stream: MediaStream, filterFunc: FilterTracksFunc) 
     .forEach((track) => removeTrack(stream, track));
 }
 
-export function removeTracksFromPeer(peerConn: RTCPeerConnection, filterFunc: FilterTracksFunc) {
-  peerConn
+export function removeTracksFromPeer(peer: RTCPeerConnection, filterFunc: FilterTracksFunc) {
+  peer
     .getSenders()
     .filter((sender) => sender.track && filterFunc(sender.track))
-    .forEach((sender) => peerConn.removeTrack(sender));
+    .forEach((sender) => peer.removeTrack(sender));
 }

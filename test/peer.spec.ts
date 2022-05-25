@@ -172,19 +172,32 @@ test('should replace track on peer', async ({ page }) => {
         let remoteCount = 0;
         peer1.on('streamRemote', async () => {
           remoteCount += 1;
-          if (remoteCount === 1) {
+          if (remoteCount === 2) {
             const [oldTrack] = stream.getVideoTracks();
             const [newTrack] = stream2.getVideoTracks();
             if (oldTrack) {
               try {
-                await peer1.replaceTrack(oldTrack, newTrack);
-                const [hasSender] = peer1
+                const trackIdsBefore = peer1
                   .get()
                   .getSenders()
-                  .filter((sender) => sender.track === newTrack);
-                const numSenders = peer1.get().getSenders().length;
-                const numTracks = peer1.getStreamLocal().getTracks().length;
-                if (hasSender && numSenders === 2 && numTracks === 2) {
+                  .map((sender) => sender.track?.id)
+                  .sort();
+                await peer1.replaceTrack(oldTrack, newTrack);
+                const trackIdsAfter = peer1
+                  .get()
+                  .getSenders()
+                  .map((sender) => sender.track?.id)
+                  .sort();
+
+                const tracksIdsExpected = trackIdsBefore
+                  .map((trackId) => (trackId === oldTrack.id ? newTrack.id : trackId))
+                  .sort();
+
+                const isTracksMatch =
+                  tracksIdsExpected.length === trackIdsAfter.length &&
+                  tracksIdsExpected.every((element, index) => element === trackIdsAfter[index]);
+
+                if (isTracksMatch) {
                   resolve();
                 } else {
                   reject();

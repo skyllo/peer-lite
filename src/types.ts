@@ -4,7 +4,7 @@ export type Arguments<T> = [T] extends [(...args: infer U) => any]
   ? []
   : [T];
 
-export type FilterTracksFunc = (track: MediaStreamTrack | null) => boolean;
+export type FilterTracksFunc = (track: MediaStreamTrack) => boolean;
 
 export interface TypedEmitter<Events> {
   on<E extends keyof Events>(event: E, listener: Events[E]): this;

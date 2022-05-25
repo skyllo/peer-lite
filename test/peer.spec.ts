@@ -99,8 +99,8 @@ test('should remove tracks from local stream peer', async ({ page }) => {
     const stream = await window.Peer.getUserMedia();
     const peer = getPeer();
     peer.addStream(stream);
-    peer.removeTracks(true, false);
-    peer.removeTracks(false, true);
+    peer.removeTrack(stream.getVideoTracks()[0]);
+    peer.removeTrack(stream.getAudioTracks()[0]);
     return peer.getStreamLocal().getTracks().length === 0;
   });
 
@@ -173,16 +173,18 @@ test('should replace track on peer', async ({ page }) => {
         peer1.on('streamRemote', async () => {
           remoteCount += 1;
           if (remoteCount === 1) {
-            const newTrack = stream2.getTracks()[0];
-            const oldTrack = peer1.get().getSenders()[0].track;
+            const [oldTrack] = stream.getVideoTracks();
+            const [newTrack] = stream2.getVideoTracks();
             if (oldTrack) {
               try {
-                await peer1.replaceTrack(newTrack, oldTrack);
-                const hasNewTrack = peer1
+                await peer1.replaceTrack(oldTrack, newTrack);
+                const [hasSender] = peer1
                   .get()
                   .getSenders()
                   .filter((sender) => sender.track === newTrack);
-                if (hasNewTrack) {
+                const numSenders = peer1.get().getSenders().length;
+                const numTracks = peer1.getStreamLocal().getTracks().length;
+                if (hasSender && numSenders === 2 && numTracks === 2) {
                   resolve();
                 } else {
                   reject();
@@ -208,24 +210,22 @@ test('should fail to replace track on peer', async ({ page }) => {
         const peer2 = getPeer({ name: 'peer2' });
 
         const stream = await window.Peer.getUserMedia();
-        const stream2 = await navigator.mediaDevices.getDisplayMedia();
 
         let remoteCount = 0;
         peer1.on('streamRemote', async () => {
           remoteCount += 1;
           if (remoteCount === 1) {
-            const [newTrack] = stream2.getTracks().filter((track) => track.kind === 'audio');
-            const [oldTrack] = peer1
+            const [oldTrack] = stream.getVideoTracks();
+            const [newTrack] = peer1
               .get()
               .getSenders()
               .map((sender) => sender.track)
-              .filter((track) => track?.kind === 'video');
-            if (oldTrack) {
+              .filter((track) => track?.kind === 'audio');
+            if (newTrack) {
               try {
-                await peer1.replaceTrack(newTrack, oldTrack);
+                await peer1.replaceTrack(oldTrack, newTrack);
               } catch (err) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                if (err instanceof Error && err.name === 'TypeError') {
+                if (err instanceof Error) {
                   resolve();
                 } else {
                   reject(err);
@@ -295,41 +295,6 @@ test('should connect two peers that make an offer simultaneously when one is pol
         peer2.start();
       })
   );
-});
-
-test('should enable and disable tracks correctly', async ({ page }) => {
-  const actual = await page.evaluate(
-    () =>
-      new Promise(async (resolve) => {
-        const peer1 = getPeer({ name: 'peer1' });
-        const peer2 = getPeer({ name: 'peer2' });
-
-        const stream = await window.Peer.getUserMedia();
-
-        function isTracksEnabled() {
-          return peer2
-            .getStreamLocal()
-            .getTracks()
-            .some((track) => track.enabled);
-        }
-
-        const result: boolean[] = [];
-
-        peer2.on('streamRemote', () => {
-          result.push(isTracksEnabled());
-          peer2.pauseTracks();
-          result.push(isTracksEnabled());
-          peer2.resumeTracks();
-          result.push(isTracksEnabled());
-          resolve(result);
-        });
-
-        setupPeers(peer1, peer2, stream);
-        peer1.start();
-      })
-  );
-
-  expect(actual).toEqual([true, false, true]);
 });
 
 test('should send data to other peer using data channels', async ({ page }) => {

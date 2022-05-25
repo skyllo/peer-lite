@@ -2,12 +2,11 @@
 import { EventEmitter } from './emitter';
 import { Arguments, PeerEvents, PeerOptions, TypedEmitter } from './types';
 import {
-  filterTracksAV,
+  filterByTrack,
   getDefaultCamConstraints,
   randomHex,
   removeTracks,
   removeTracksFromPeer,
-  setTracksEnabled,
 } from './utils';
 
 const POLITE_DEFAULT_VALUE = true;
@@ -373,7 +372,7 @@ export default class Peer {
   /** Add a stream to the local stream */
   public addStream(stream: MediaStream, replace = true) {
     if (replace) {
-      this.removeTracks(true, true);
+      this.removeTracks(this.streamLocal.getTracks());
     }
     stream.getTracks().forEach((track) => this.addTrack(track));
   }
@@ -396,11 +395,16 @@ export default class Peer {
   }
 
   /** Removes the local and remote stream of audio and/or video tracks */
-  public removeTracks(video = true, audio = true) {
-    removeTracks(this.streamLocal, filterTracksAV(video, audio));
+  public removeTracks(tracks: MediaStreamTrack[]) {
+    tracks.forEach((track) => this.removeTrack(track));
+  }
+
+  /** Removes the local and remote stream of audio and/or video tracks */
+  public removeTrack(track: MediaStreamTrack) {
+    removeTracks(this.streamLocal, filterByTrack(track));
     if (!this.isClosed()) {
       // remove tracks from peer connection
-      removeTracksFromPeer(this.peer, filterTracksAV(video, audio));
+      removeTracksFromPeer(this.peer, filterByTrack(track));
     }
   }
 
@@ -408,16 +412,16 @@ export default class Peer {
   public async replaceTrack(track: MediaStreamTrack, newTrack: MediaStreamTrack) {
     try {
       if (!this.isClosed()) {
-        const [sender] = this.peer.getSenders().filter((_sender) => _sender.track === newTrack);
+        const [sender] = this.peer.getSenders().filter((_sender) => _sender.track === track);
         if (sender) {
           // remove/add track on local stream
-          removeTracks(this.streamLocal, (_track) => _track === newTrack);
-          this.streamLocal.addTrack(track);
+          removeTracks(this.streamLocal, filterByTrack(track));
+          this.streamLocal.addTrack(newTrack);
           // replace track on peer connection - will error if renegotiation needed
-          await sender.replaceTrack(track);
+          await sender.replaceTrack(newTrack);
           this.emit('streamLocal', this.streamLocal);
         } else {
-          this.error(`Failed to find track to replace: ${newTrack.id}`);
+          this.error(`Failed to find track to replace: ${track.id}`);
         }
       }
     } catch (err) {
@@ -426,16 +430,6 @@ export default class Peer {
         throw err;
       }
     }
-  }
-
-  /** Disables local stream tracks of audio and/or video tracks  */
-  public pauseTracks(video = true, audio = true) {
-    setTracksEnabled(this.streamLocal, filterTracksAV(video, audio), false);
-  }
-
-  /** Enables local stream tracks of audio and/or video tracks */
-  public resumeTracks(video = true, audio = true) {
-    setTracksEnabled(this.streamLocal, filterTracksAV(video, audio), true);
   }
 
   // emitter

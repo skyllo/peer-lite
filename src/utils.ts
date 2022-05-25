@@ -18,16 +18,8 @@ export function randomHex(n: number) {
     .join('');
 }
 
-export const filterTracksAV =
-  (video: boolean, audio: boolean): FilterTracksFunc =>
-  (track) => {
-    const isVideo = video && track?.kind === 'video';
-    const isAudio = audio && track?.kind === 'audio';
-    return isVideo || isAudio;
-  };
-
-function getTracks(stream: MediaStream, filterFunc: FilterTracksFunc) {
-  return stream.getTracks().filter(filterFunc);
+export function filterByTrack(track: MediaStreamTrack): FilterTracksFunc {
+  return (existingTrack) => existingTrack === track;
 }
 
 function removeTrack(stream: MediaStream, track: MediaStreamTrack) {
@@ -36,23 +28,15 @@ function removeTrack(stream: MediaStream, track: MediaStreamTrack) {
 }
 
 export function removeTracks(stream: MediaStream, filterFunc: FilterTracksFunc) {
-  getTracks(stream, filterFunc).forEach((track) => removeTrack(stream, track));
+  stream
+    .getTracks()
+    .filter(filterFunc)
+    .forEach((track) => removeTrack(stream, track));
 }
 
 export function removeTracksFromPeer(peerConn: RTCPeerConnection, filterFunc: FilterTracksFunc) {
   peerConn
     .getSenders()
-    .filter((sender) => filterFunc(sender.track))
+    .filter((sender) => sender.track && filterFunc(sender.track))
     .forEach((sender) => peerConn.removeTrack(sender));
-}
-
-export function setTracksEnabled(
-  stream: MediaStream,
-  filterFunc: FilterTracksFunc,
-  enabled: boolean
-) {
-  getTracks(stream, filterFunc).forEach((track) => {
-    // eslint-disable-next-line no-param-reassign
-    track.enabled = enabled;
-  });
 }

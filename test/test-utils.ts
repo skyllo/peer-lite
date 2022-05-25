@@ -8,8 +8,10 @@ declare global {
 
 export function getPeer(options: PeerOptions = {}) {
   const peer: Peer = new window.Peer(options);
-  peer.on('error', (err) => {
-    throw new Error(err.toString());
+  peer.on('error', ({ error }) => {
+    if (error) {
+      console.error(error.name);
+    }
   });
   return peer;
 }

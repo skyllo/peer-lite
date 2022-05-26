@@ -22,23 +22,30 @@ interface Props {
 export default function CamActions(props: Props) {
   const { className, peer } = props;
 
-  function call() {
+  function destroy() {
     peer.destroy();
-    // create offer
-    peer.start();
   }
 
-  function hangup() {
+  async function shareScreen() {
+    const screenStream = await navigator.mediaDevices.getDisplayMedia();
+    peer.addStream(screenStream);
+  }
+
+  function start() {
     peer.destroy();
+    peer.start();
   }
 
   return (
     <CamActionsStyled className={className}>
-      <button className="button" type="button" onClick={hangup}>
+      <button className="button" type="button" onClick={destroy}>
         Hang Up
       </button>
-      <button className="button" type="button" onClick={call}>
-        Call
+      <button className="button" type="button" onClick={shareScreen}>
+        Share Screen
+      </button>
+      <button className="button" type="button" onClick={start}>
+        Start
       </button>
     </CamActionsStyled>
   );

@@ -9,12 +9,12 @@ import { usePeer, useSocket, useCreatePeer, useCreateSocket } from '../utils/hoo
 const SignalStyled = styled.div`
   display: grid;
   box-sizing: border-box;
-  grid-template-columns: 250px 1fr 1fr;
+  grid-template-columns: 250px 1fr 1fr 1fr;
   grid-template-rows: 1fr 40px;
   grid-gap: 20px;
   grid-template-areas:
-    'chat remote local'
-    'chat actions actions';
+    'chat remote screen local'
+    'chat actions actions actions';
 
   padding-right: 20px;
 
@@ -24,6 +24,10 @@ const SignalStyled = styled.div`
 
   .remote {
     grid-area: remote;
+  }
+
+  .screen {
+    grid-area: screen;
   }
 
   .local {
@@ -37,6 +41,7 @@ const SignalStyled = styled.div`
 
 export default function Signal() {
   const [streamLocal, setStreamLocal] = useState<MediaStream | null>(null);
+  const [streamScreen, setStreamScreen] = useState<MediaStream | null>(null);
   const [streamRemote, setStreamRemote] = useState<MediaStream | null>(null);
   const peer = useCreatePeer({ enableDataChannels: true, channelName: 'messages' });
   const socket = useCreateSocket();
@@ -49,10 +54,6 @@ export default function Signal() {
   });
 
   useSocket(socket, 'signal', async ({ description }) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    if (description.type === 'offer') {
-      peer.destroy();
-    }
     await peer.signal(description);
   });
 
@@ -66,7 +67,17 @@ export default function Signal() {
   });
 
   usePeer(peer, 'streamRemote', (remoteStream) => {
-    setStreamRemote(remoteStream);
+    const screenMediaStream = new MediaStream();
+    const remoteMediaStream = new MediaStream();
+    remoteStream.getTracks().forEach((track, index) => {
+      if (index <= 1) {
+        remoteMediaStream.addTrack(track);
+      } else {
+        screenMediaStream.addTrack(track);
+      }
+    });
+    setStreamRemote(remoteMediaStream);
+    setStreamScreen(screenMediaStream);
   });
 
   usePeer(peer, 'streamLocal', (localStream) => {
@@ -84,6 +95,7 @@ export default function Signal() {
     <SignalStyled>
       <ChatBox className="chat" peer={peer} socket={socket} />
       <CamVideo className="remote" id="remoteVideo" muted={false} stream={streamRemote} />
+      <CamVideo className="screen" id="screenVideo" muted={false} stream={streamScreen} />
       <CamVideo className="local" id="localVideo" muted stream={streamLocal} />
       <CamActions className="actions" peer={peer} />
     </SignalStyled>

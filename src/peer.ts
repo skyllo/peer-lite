@@ -75,7 +75,7 @@ export default class Peer {
     }
 
     this.peer.onicecandidate = (event) => {
-      if (!event || !event.candidate) return;
+      if (!event?.candidate) return;
       // if batching candidates then setup timeouts
       if (this.options.batchCandidates) {
         // clear timeout and push new candidate into batch
@@ -145,9 +145,6 @@ export default class Peer {
         const offer = await this.peer.createOffer(offerOptions);
         if (this.peer.signalingState !== 'stable') return;
 
-        // add pending data channels
-        this.createDataChannels();
-
         console.log(`${this.options.name}.onnegotiationneeded()`);
         offer.sdp = offer.sdp && sdpTransform(offer.sdp);
         await this.peer.setLocalDescription(offer);
@@ -193,7 +190,7 @@ export default class Peer {
       this.isActive = true;
       this.polite = polite;
 
-      // ⚡ triggers "negotiationneeded" event if connected
+      // ⚡ triggers "negotiationneeded" event
       this.peer.restartIce();
     } catch (err) {
       if (err instanceof Error) {
@@ -279,7 +276,9 @@ export default class Peer {
       this.error('Failed to addDataChannel as peer connection is closed');
       return;
     }
-    this.channelsPending.set(label, opts);
+    if (!this.channels.has(label)) {
+      this.channelsPending.set(label, opts);
+    }
     if (this.isActive) {
       this.createDataChannels();
     }
@@ -330,6 +329,7 @@ export default class Peer {
       this.isActive = false;
       this.makingOffer = false;
       this.ignoreOffer = false;
+      this.channels.clear();
       this.channelsPending.clear();
       this.peer.close();
       console.log(`${this.options.name}.disconnected()`);
@@ -370,7 +370,7 @@ export default class Peer {
   // helpers
 
   /** Add a stream to the local stream */
-  public addStream(stream: MediaStream, replace = true) {
+  public addStream(stream: MediaStream, replace = false) {
     if (replace) {
       this.removeTracks(this.streamLocal.getTracks());
     }

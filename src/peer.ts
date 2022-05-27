@@ -64,7 +64,11 @@ export default class Peer {
     this.peer = new RTCPeerConnection(this.options.config);
     // ⚡ triggers "negotiationneeded" event if connected
     this.streamLocal.getTracks().forEach((track) => this.peer.addTrack(track, this.streamLocal));
-
+    // create data channel to add "m=application" to SDP
+    const { channelName, channelOptions, enableDataChannels } = this.options;
+    if (enableDataChannels) {
+      this.addDataChannel(channelName, channelOptions);
+    }
     // setup peer connection events
     const candidates: RTCIceCandidate[] = [];
     let candidatesId: ReturnType<typeof window.setTimeout>;
@@ -135,12 +139,9 @@ export default class Peer {
 
         this.makingOffer = true;
 
-        const { channelName, channelOptions, enableDataChannels, offerOptions, sdpTransform } =
-          this.options;
-        if (enableDataChannels) {
-          // create data channel to add "m=application" to SDP
-          this.addDataChannel(channelName, channelOptions);
-        }
+        const { offerOptions, sdpTransform } = this.options;
+        // add pending data channels
+        this.createDataChannels();
 
         const offer = await this.peer.createOffer(offerOptions);
         if (this.peer.signalingState !== 'stable') return;

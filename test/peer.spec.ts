@@ -310,14 +310,13 @@ test('should connect two peers that make an offer simultaneously when one is pol
   );
 });
 
-test('should send data to other peer using data channels', async ({ page }) => {
+test('should open dynamic data channel from accepting peer', async ({ page }) => {
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve, reject) => {
         const peer1 = getPeer({
           name: 'peer1',
           enableDataChannels: true,
-          channelName: 'test',
         });
         const peer2 = getPeer({
           name: 'peer2',
@@ -327,7 +326,13 @@ test('should send data to other peer using data channels', async ({ page }) => {
 
         const stream = await window.Peer.getUserMedia();
 
-        peer1.on('channelData', ({ channel, data, source }) => {
+        peer1.on('connected', () => {
+          setTimeout(() => {
+            peer1.send('hello world', 'test');
+          }, 500);
+        });
+
+        peer2.on('channelData', ({ channel, data, source }) => {
           if (channel.label === 'test' && data === 'hello world' && source === 'incoming') {
             resolve();
           } else {
@@ -335,10 +340,39 @@ test('should send data to other peer using data channels', async ({ page }) => {
           }
         });
 
-        peer2.on('connected', () => {
+        setupPeers(peer1, peer2, stream);
+        peer1.start();
+      })
+  );
+});
+
+test('should send data to other peer using default data channels', async ({ page }) => {
+  await page.evaluate(
+    () =>
+      new Promise<void>(async (resolve, reject) => {
+        const peer1 = getPeer({
+          name: 'peer1',
+          enableDataChannels: true,
+        });
+        const peer2 = getPeer({
+          name: 'peer2',
+          enableDataChannels: true,
+        });
+
+        const stream = await window.Peer.getUserMedia();
+
+        peer2.on('channelOpen', ({ channel }) => {
           setTimeout(() => {
-            peer2.send('hello world');
+            peer2.send('hello world', channel.label);
           }, 500);
+        });
+
+        peer1.on('channelData', ({ data, source }) => {
+          if (data === 'hello world' && source === 'incoming') {
+            resolve();
+          } else {
+            reject(new Error('did not get correct channel data'));
+          }
         });
 
         setupPeers(peer1, peer2, stream);
@@ -409,22 +443,24 @@ test('should send data to other peer then close using negotiated data channels',
           }
         });
 
-        peer2.on('channelOpen', () => {
-          setTimeout(() => {
-            peer2.send('hello world', 'extraMessages');
-          }, 500);
+        peer2.on('channelOpen', ({ channel }) => {
+          if (channel.label === 'extraMessages' && channel.negotiated) {
+            setTimeout(() => {
+              peer2.send('hello world', 'extraMessages');
+            }, 500);
+          }
         });
 
-        peer1.on('channelClosed', () => {
-          resolve();
+        peer1.on('channelClosed', ({ channel }) => {
+          if (channel.label === 'extraMessages') {
+            resolve();
+          } else {
+            reject();
+          }
         });
 
         setupPeers(peer1, peer2, stream);
         peer1.start();
-
-        peer1.get().addEventListener('datachannel', () => {
-          reject(new Error('got non-negotiated data channel'));
-        });
       })
   );
 });

@@ -37,9 +37,7 @@ export default class Peer {
     config: {
       iceServers: [{ urls: ['stun:stun.l.google.com:19302'] }],
     },
-    constraints: {},
     offerOptions: {},
-    answerOptions: {},
     enableDataChannels: false,
     channelLabel: randomHex(20),
     channelOptions: {},
@@ -225,11 +223,12 @@ export default class Peer {
         // add pending data channels
         this.createDataChannels();
 
-        await this.peer.setLocalDescription();
-        if (this.peer.localDescription) {
-          console.log(this.options.name, '->', this.peer.localDescription.type);
-          this.emit('signal', this.peer.localDescription);
-        }
+        const answer = await this.peer.createAnswer();
+        answer.sdp = answer.sdp && this.options.sdpTransform(answer.sdp);
+        await this.peer.setLocalDescription(answer);
+
+        console.log(this.options.name, '->', answer.type);
+        this.emit('signal', answer);
       }
       this.polite = POLITE_DEFAULT_VALUE;
     } catch (err) {

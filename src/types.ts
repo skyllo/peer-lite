@@ -38,12 +38,10 @@ export interface PeerEvents {
 export interface PeerOptions {
   batchCandidates?: boolean;
   batchCandidatesTimeout?: number;
-  enableDataChannels?: boolean;
   name?: string;
   config?: RTCConfiguration;
-  constraints?: MediaStreamConstraints;
   offerOptions?: RTCOfferOptions;
-  answerOptions?: RTCAnswerOptions;
+  enableDataChannels?: boolean;
   channelLabel?: string;
   channelOptions?: RTCDataChannelInit;
   sdpTransform?: (sdp: string) => string;

@@ -321,7 +321,7 @@ test('should open dynamic data channel from accepting peer', async ({ page }) =>
         const peer2 = getPeer({
           name: 'peer2',
           enableDataChannels: true,
-          channelName: 'test',
+          channelLabel: 'test',
         });
 
         const stream = await window.Peer.getUserMedia();

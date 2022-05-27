@@ -43,7 +43,7 @@ export default function Signal() {
   const [streamLocal, setStreamLocal] = useState<MediaStream | null>(null);
   const [streamScreen, setStreamScreen] = useState<MediaStream | null>(null);
   const [streamRemote, setStreamRemote] = useState<MediaStream | null>(null);
-  const peer = useCreatePeer({ enableDataChannels: true, channelName: 'messages' });
+  const peer = useCreatePeer({ enableDataChannels: true, channelLabel: 'messages' });
   const socket = useCreateSocket();
 
   // socket handlers

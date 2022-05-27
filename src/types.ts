@@ -44,7 +44,7 @@ export interface PeerOptions {
   constraints?: MediaStreamConstraints;
   offerOptions?: RTCOfferOptions;
   answerOptions?: RTCAnswerOptions;
-  channelName?: string;
+  channelLabel?: string;
   channelOptions?: RTCDataChannelInit;
   sdpTransform?: (sdp: string) => string;
 }

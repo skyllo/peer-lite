@@ -41,7 +41,7 @@ export default class Peer {
     offerOptions: {},
     answerOptions: {},
     enableDataChannels: false,
-    channelName: randomHex(20),
+    channelLabel: randomHex(20),
     channelOptions: {},
     sdpTransform: (sdp) => sdp,
   };
@@ -65,9 +65,9 @@ export default class Peer {
     // ⚡ triggers "negotiationneeded" event if connected
     this.streamLocal.getTracks().forEach((track) => this.peer.addTrack(track, this.streamLocal));
     // create data channel to add "m=application" to SDP
-    const { channelName, channelOptions, enableDataChannels } = this.options;
+    const { channelLabel, channelOptions, enableDataChannels } = this.options;
     if (enableDataChannels) {
-      this.addDataChannel(channelName, channelOptions);
+      this.addDataChannel(channelLabel, channelOptions);
     }
     // setup peer connection events
     const candidates: RTCIceCandidate[] = [];
@@ -256,7 +256,7 @@ export default class Peer {
   /** Sends data to another peer using an RTCDataChannel */
   public send(
     data: string | Blob | ArrayBuffer | ArrayBufferView,
-    label: string = this.options.channelName
+    label: string = this.options.channelLabel
   ): boolean {
     const channel = this.channels.get(label);
     if (channel?.readyState === 'open' && data) {
@@ -268,7 +268,10 @@ export default class Peer {
   }
 
   /** Add an RTCDataChannel to peer */
-  public addDataChannel(label: string = this.options.channelName, opts: RTCDataChannelInit = {}) {
+  public addDataChannel(
+    label: string = this.options.channelLabel,
+    options: RTCDataChannelInit = {}
+  ) {
     if (!this.options.enableDataChannels) {
       this.error('Failed to addDataChannel as "enableDataChannels" is false');
       return;
@@ -278,7 +281,7 @@ export default class Peer {
       return;
     }
     if (!this.channels.has(label)) {
-      this.channelsPending.set(label, opts);
+      this.channelsPending.set(label, options);
     }
     if (this.isActive) {
       this.createDataChannels();
@@ -286,16 +289,16 @@ export default class Peer {
   }
 
   /** Get an RTCDataChannel added to peer */
-  public getDataChannel(label: string = this.options.channelName) {
+  public getDataChannel(label: string = this.options.channelLabel) {
     return this.channels.get(label);
   }
 
   private createDataChannels() {
     try {
-      Array.from(this.channelsPending.entries()).forEach(([key, value]) => {
+      Array.from(this.channelsPending.entries()).forEach(([label, options]) => {
         // ⚡ triggers "negotiationneeded" event if connected and no other data channels already added
-        const channel = this.peer.createDataChannel(key, value);
-        this.channels.set(channel.label, channel);
+        const channel = this.peer.createDataChannel(label, options);
+        this.channels.set(label, channel);
         this.addDataChannelEvents(channel);
       });
       this.channelsPending.clear();
@@ -443,7 +446,7 @@ export default class Peer {
     return this.emitter.off(event, cb);
   }
 
-  public emit<E extends keyof PeerEvents>(event: E, ...args: Arguments<PeerEvents[E]>) {
+  private emit<E extends keyof PeerEvents>(event: E, ...args: Arguments<PeerEvents[E]>) {
     return this.emitter.emit(event, ...args);
   }
 

@@ -22,16 +22,14 @@ export function filterByTrack(track: MediaStreamTrack): FilterTracksFunc {
   return (existingTrack) => existingTrack === track;
 }
 
-function removeTrack(stream: MediaStream, track: MediaStreamTrack) {
-  track.stop();
-  stream.removeTrack(track);
-}
-
 export function removeTracks(stream: MediaStream, filterFunc: FilterTracksFunc) {
   stream
     .getTracks()
     .filter(filterFunc)
-    .forEach((track) => removeTrack(stream, track));
+    .forEach((track) => {
+      track.stop();
+      stream.removeTrack(track);
+    });
 }
 
 export function removeTracksFromPeer(peer: RTCPeerConnection, filterFunc: FilterTracksFunc) {

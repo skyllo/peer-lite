@@ -38,7 +38,7 @@ export interface PeerEvents {
 export interface PeerOptions {
   /** Enables support for batching ICECandidates */
   batchCandidates?: boolean;
-  /** Timeout before emitting batched ICECandidates */
+  /** Timeout in MS before emitting batched ICECandidates */
   batchCandidatesTimeout?: number;
   /** Peer name used in emitting errors */
   name?: string;

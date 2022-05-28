@@ -36,17 +36,17 @@ export interface PeerEvents {
 }
 
 export interface PeerOptions {
-  /** Enables support for batching ICECandidates */
+  /** Enable support for batching ICECandidates */
   batchCandidates?: boolean;
   /** Timeout in MS before emitting batched ICECandidates */
   batchCandidatesTimeout?: number;
-  /** Peer name used in emitting errors */
+  /** Peer name used when emitting errors */
   name?: string;
   /** RTCPeerConnection options */
   config?: RTCConfiguration;
   /** RTCOfferOptions options */
   offerOptions?: RTCOfferOptions;
-  /** Enables support for RTCDataChannels */
+  /** Enable support for RTCDataChannels */
   enableDataChannels?: boolean;
   /** Default RTCDataChannel label */
   channelLabel?: string;

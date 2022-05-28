@@ -44,13 +44,13 @@ export default class Peer {
     sdpTransform: (sdp) => sdp,
   };
 
-  /** Creates a peer instance */
+  /** Create a peer instance */
   public constructor(options?: PeerOptions) {
     this.options = { ...this.options, ...options };
     this.peer = this.init();
   }
 
-  /** Initializes the peer connection */
+  /** Initialize the peer */
   public init(): RTCPeerConnection {
     // do not reset connection if a new one already exists
     if (this.status() === 'new') {
@@ -173,7 +173,7 @@ export default class Peer {
     return this.peer;
   }
 
-  /** Starts the RTCPeerConnection signalling */
+  /** Start the RTCPeerConnection signalling */
   public start({ polite = POLITE_DEFAULT_VALUE } = {}) {
     try {
       // reset peer if only local offer is set
@@ -252,7 +252,7 @@ export default class Peer {
     }
   }
 
-  /** Sends data to another peer using an RTCDataChannel */
+  /** Send data to another peer using an RTCDataChannel */
   public send(
     data: string | Blob | ArrayBuffer | ArrayBufferView,
     label: string = this.options.channelLabel
@@ -325,7 +325,7 @@ export default class Peer {
     };
   }
 
-  /** Closes any active peer connection */
+  /** Close any active peer */
   public destroy() {
     if (!this.isClosed()) {
       this.polite = POLITE_DEFAULT_VALUE;
@@ -340,22 +340,22 @@ export default class Peer {
     }
   }
 
-  /** Returns the ICEConnectionState of the peer */
+  /** Return the ICEConnectionState of the peer */
   public status(): RTCIceConnectionState {
     return this.peer?.iceConnectionState ?? 'closed';
   }
 
-  /** Returns true if the peer is connected */
+  /** Return true if the peer is connected */
   public isConnected(): boolean {
     return this.status() === 'connected';
   }
 
-  /** Returns true if the peer is closed */
+  /** Return true if the peer is closed */
   public isClosed(): boolean {
     return this.status() === 'closed';
   }
 
-  /** Returns the peer RTCPeerConnection */
+  /** Return the RTCPeerConnection */
   public get() {
     return this.peer;
   }
@@ -372,7 +372,7 @@ export default class Peer {
 
   // helpers
 
-  /** Add a stream to peer */
+  /** Add stream to peer */
   public addStream(stream: MediaStream, replace = false) {
     if (replace) {
       this.removeTracks(this.streamLocal.getTracks());
@@ -380,12 +380,12 @@ export default class Peer {
     stream.getTracks().forEach((track) => this.addTrack(track));
   }
 
-  /** Remove a stream from peer */
+  /** Remove stream from peer */
   public removeStream(stream: MediaStream) {
     this.removeTracks(stream.getTracks());
   }
 
-  /** Add a track to peer */
+  /** Add track to peer */
   public addTrack(track: MediaStreamTrack) {
     try {
       this.streamLocal.addTrack(track);
@@ -402,12 +402,12 @@ export default class Peer {
     }
   }
 
-  /** Removes tracks on peer */
+  /** Remove tracks on peer */
   public removeTracks(tracks: MediaStreamTrack[]) {
     tracks.forEach((track) => this.removeTrack(track));
   }
 
-  /** Removes track on peer */
+  /** Remove track on peer */
   public removeTrack(track: MediaStreamTrack) {
     removeTracks(this.streamLocal, filterByTrack(track));
     if (!this.isClosed()) {

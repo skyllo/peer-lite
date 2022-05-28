@@ -82,12 +82,18 @@ export interface PeerOptions {
 ```
 
 # Testing
-The tests run inside a headless Chrome with [Playwright](https://playwright.dev/)
-using [@playwright/test](https://www.npmjs.com/package/@playwright/test) with [Jest](https://jestjs.io/).
-These run quickly and allow testing of real WebRTC APIs in a real browser.
+The tests run inside a headless Chrome and Firefox with [Playwright](https://playwright.dev/)
+and [@playwright/test](https://www.npmjs.com/package/@playwright/test).
+These run quickly and allow testing of WebRTC APIs in real browsers.
 
+Run Tests (Chrome only)
 ```bash
 yarn test
+```
+
+Run Tests (Chrome + Firefox)
+```bash
+CI=true yarn test
 ```
 
 # Similar Projects

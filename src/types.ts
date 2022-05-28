@@ -36,13 +36,22 @@ export interface PeerEvents {
 }
 
 export interface PeerOptions {
+  /** Enables support for batching ICECandidates */
   batchCandidates?: boolean;
+  /** Timeout before emitting batched ICECandidates */
   batchCandidatesTimeout?: number;
+  /** Peer name used in emitting errors */
   name?: string;
+  /** RTCPeerConnection options */
   config?: RTCConfiguration;
+  /** RTCOfferOptions options */
   offerOptions?: RTCOfferOptions;
+  /** Enables support for RTCDataChannels */
   enableDataChannels?: boolean;
+  /** Default RTCDataChannel label */
   channelLabel?: string;
+  /** Default RTCDataChannel options */
   channelOptions?: RTCDataChannelInit;
+  /** Function to transform offer/answer SDP */
   sdpTransform?: (sdp: string) => string;
 }

@@ -174,7 +174,7 @@ export default class Peer {
   }
 
   /** Starts the RTCPeerConnection signalling */
-  public start({ polite = POLITE_DEFAULT_VALUE }: { polite?: boolean } = {}) {
+  public start({ polite = POLITE_DEFAULT_VALUE } = {}) {
     try {
       // reset peer if only local offer is set
       if (this.peer.signalingState === 'have-local-offer') {

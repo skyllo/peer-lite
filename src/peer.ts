@@ -372,7 +372,7 @@ export default class Peer {
 
   // helpers
 
-  /** Add a stream to the local stream */
+  /** Add a stream to peer */
   public addStream(stream: MediaStream, replace = false) {
     if (replace) {
       this.removeTracks(this.streamLocal.getTracks());
@@ -380,7 +380,12 @@ export default class Peer {
     stream.getTracks().forEach((track) => this.addTrack(track));
   }
 
-  /** Add a track to the local stream */
+  /** Remove a stream from peer */
+  public removeStream(stream: MediaStream) {
+    this.removeTracks(stream.getTracks());
+  }
+
+  /** Add a track to peer */
   public addTrack(track: MediaStreamTrack) {
     try {
       this.streamLocal.addTrack(track);
@@ -397,12 +402,12 @@ export default class Peer {
     }
   }
 
-  /** Removes the local and remote stream of audio and/or video tracks */
+  /** Removes tracks on peer */
   public removeTracks(tracks: MediaStreamTrack[]) {
     tracks.forEach((track) => this.removeTrack(track));
   }
 
-  /** Removes the local and remote stream of audio and/or video tracks */
+  /** Removes track on peer */
   public removeTrack(track: MediaStreamTrack) {
     removeTracks(this.streamLocal, filterByTrack(track));
     if (!this.isClosed()) {

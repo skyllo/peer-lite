@@ -18,7 +18,7 @@ yarn add peer-lite
 ```
 
 # Usage
-Example of two peers connecting to each other locally, see more examples [here](example).
+## Two peers connecting locally
 
 ```javascript
 import Peer from 'peer-lite';
@@ -60,24 +60,106 @@ peer2.on('streamRemote', (stream) => {
 })();
 ```
 
+## Peer connection with fake signalling server
+
+```javascript
+import Peer from 'peer-lite';
+
+const peer = new Peer();
+const fakeSocket = new Socket();
+
+// Peer events
+
+peer.on('signal', async (description) => {
+  fakeSocket.emit('signal', description);
+});
+
+peer.on('onicecandidates', async (candidates) => {
+  fakeSocket.emit('onicecandidates', candidates);
+});
+
+peer.on('streamLocal', (stream) => {
+  document.querySelector('#videoLocal').srcObject = stream;
+});
+
+peer.on('streamRemote', (stream) => {
+  document.querySelector('#videoRemote').srcObject = stream;
+});
+
+// Socket events
+
+fakeSocket.on('signal', async (description) => {
+  await peer.signal(description);
+});
+
+fakeSocket.on('onicecandidates', async (candidates) => {
+  const promises = candidates.map(async candidate => peer.addIceCandidate(candidate));
+  await Promise.all(promises);
+});
+
+(async () => {
+  const stream = await Peer.getUserMedia();
+  peer.addStream(stream);
+  peer.start();
+})();
+```
+
+# Examples
+See more examples [here](example) with signalling server.
+
 # API
 ## Constructor
 `new Peer(Options)`
 
-### Options
-Typescript Options Definition
+### Peer Options
 
 ```typescript
 export interface PeerOptions {
+  /** Enable support for batching ICECandidates */
   batchCandidates?: boolean;
+  /** Timeout in MS before emitting batched ICECandidates */
   batchCandidatesTimeout?: number;
+  /** Peer name used when emitting errors */
   name?: string;
+  /** RTCPeerConnection options */
   config?: RTCConfiguration;
+  /** RTCOfferOptions options */
   offerOptions?: RTCOfferOptions;
+  /** Enable support for RTCDataChannels */
   enableDataChannels?: boolean;
+  /** Default RTCDataChannel label */
   channelLabel?: string;
+  /** Default RTCDataChannel options */
   channelOptions?: RTCDataChannelInit;
+  /** Function to transform offer/answer SDP */
   sdpTransform?: (sdp: string) => string;
+}
+```
+
+### Peer Events
+```typescript
+export interface PeerEvents {
+  error: (data: { name: string; message: string; error?: Error }) => void;
+  // Connection Status
+  connecting: VoidFunction;
+  connected: VoidFunction;
+  disconnected: VoidFunction;
+  status: (status: RTCIceConnectionState) => void;
+  // Signal and RTCIceCandidates
+  signal: (description: RTCSessionDescriptionInit) => void;
+  onicecandidates: (iceCandidates: RTCIceCandidate[]) => void;
+  // MediaStreams
+  streamLocal: (stream: MediaStream) => void;
+  streamRemote: (stream: MediaStream) => void;
+  // RTCDataChannel
+  channelOpen: (data: { channel: RTCDataChannel }) => void;
+  channelClosed: (data: { channel: RTCDataChannel }) => void;
+  channelError: (data: { channel: RTCDataChannel; event: RTCErrorEvent }) => void;
+  channelData: (data: {
+    channel: RTCDataChannel;
+    source: 'incoming' | 'outgoing';
+    data: string | Blob | ArrayBuffer | ArrayBufferView;
+  }) => void;
 }
 ```
 

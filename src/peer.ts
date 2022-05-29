@@ -287,7 +287,7 @@ export default class Peer {
     }
   }
 
-  /** Return RTCDataChannel added to peer */
+  /** Get RTCDataChannel added to peer */
   public getDataChannel(label: string = this.options.channelLabel) {
     return this.channels.get(label);
   }

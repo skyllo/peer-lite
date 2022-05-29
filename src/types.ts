@@ -14,14 +14,15 @@ export interface TypedEmitter<Events> {
 
 export interface PeerEvents {
   error: (data: { name: string; message: string; error?: Error }) => void;
-  // Connection Status and RTCIceCandidates
+  // Connection Status
   connecting: VoidFunction;
   connected: VoidFunction;
-  disconnected: () => void;
-  signal: (description: RTCSessionDescriptionInit) => void;
+  disconnected: VoidFunction;
   status: (status: RTCIceConnectionState) => void;
+  // Signal and RTCIceCandidates
+  signal: (description: RTCSessionDescriptionInit) => void;
   onicecandidates: (iceCandidates: RTCIceCandidate[]) => void;
-  // MediaStream
+  // MediaStreams
   streamLocal: (stream: MediaStream) => void;
   streamRemote: (stream: MediaStream) => void;
   // RTCDataChannel

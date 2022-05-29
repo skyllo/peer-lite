@@ -346,12 +346,12 @@ export default class Peer {
   }
 
   /** Return true if the peer is connected */
-  public isConnected(): boolean {
+  public isConnected() {
     return this.status() === 'connected';
   }
 
   /** Return true if the peer is closed */
-  public isClosed(): boolean {
+  public isClosed() {
     return this.status() === 'closed';
   }
 

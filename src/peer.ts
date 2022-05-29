@@ -252,7 +252,7 @@ export default class Peer {
     }
   }
 
-  /** Send data to another peer using an RTCDataChannel */
+  /** Send data to connected peer using an RTCDataChannel */
   public send(
     data: string | Blob | ArrayBuffer | ArrayBufferView,
     label: string = this.options.channelLabel
@@ -266,7 +266,7 @@ export default class Peer {
     return false;
   }
 
-  /** Add an RTCDataChannel to peer */
+  /** Add RTCDataChannel to peer */
   public addDataChannel(
     label: string = this.options.channelLabel,
     options: RTCDataChannelInit = {}
@@ -287,7 +287,7 @@ export default class Peer {
     }
   }
 
-  /** Get an RTCDataChannel added to peer */
+  /** Return RTCDataChannel added to peer */
   public getDataChannel(label: string = this.options.channelLabel) {
     return this.channels.get(label);
   }
@@ -325,7 +325,7 @@ export default class Peer {
     };
   }
 
-  /** Close any active peer */
+  /** Close peer if active */
   public destroy() {
     if (!this.isClosed()) {
       this.polite = POLITE_DEFAULT_VALUE;
@@ -360,7 +360,7 @@ export default class Peer {
     return this.peer;
   }
 
-  /** Get local stream */
+  /** Return the local stream */
   public getStreamLocal() {
     return this.streamLocal;
   }

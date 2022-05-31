@@ -75,8 +75,8 @@ test('should start peer if called twice afters listeners added', async ({ page }
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve) => {
-        const peer1 = getPeer({ name: 'peer1' });
-        const peer2 = getPeer({ name: 'peer2' });
+        const peer1 = getPeer({ id: 'peer1' });
+        const peer2 = getPeer({ id: 'peer2' });
 
         peer1.start();
         peer2.start({ polite: false });
@@ -137,8 +137,8 @@ test('should emit both peers remote streams', async ({ page }) => {
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve) => {
-        const peer1 = getPeer({ name: 'peer1' });
-        const peer2 = getPeer({ name: 'peer2' });
+        const peer1 = getPeer({ id: 'peer1' });
+        const peer2 = getPeer({ id: 'peer2' });
 
         const stream = await window.Peer.getUserMedia();
 
@@ -163,8 +163,8 @@ test('should replace track on peer', async ({ page }) => {
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve, reject) => {
-        const peer1 = getPeer({ name: 'peer1' });
-        const peer2 = getPeer({ name: 'peer2' });
+        const peer1 = getPeer({ id: 'peer1' });
+        const peer2 = getPeer({ id: 'peer2' });
 
         const stream = await window.Peer.getUserMedia();
         const stream2 = await window.Peer.getUserMedia();
@@ -219,8 +219,8 @@ test('should fail to replace track on peer', async ({ page }) => {
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve, reject) => {
-        const peer1 = getPeer({ name: 'peer1' });
-        const peer2 = getPeer({ name: 'peer2' });
+        const peer1 = getPeer({ id: 'peer1' });
+        const peer2 = getPeer({ id: 'peer2' });
 
         const stream = await window.Peer.getUserMedia();
 
@@ -258,8 +258,8 @@ test('should renegotiate the connection when adding a new stream', async ({ page
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve, reject) => {
-        const peer1 = getPeer({ name: 'peer1' });
-        const peer2 = getPeer({ name: 'peer2' });
+        const peer1 = getPeer({ id: 'peer1' });
+        const peer2 = getPeer({ id: 'peer2' });
 
         const stream = await window.Peer.getUserMedia();
 
@@ -294,8 +294,8 @@ test('should connect two peers that make an offer simultaneously when one is pol
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve) => {
-        const peer1 = getPeer({ name: 'peer1' });
-        const peer2 = getPeer({ name: 'peer2' });
+        const peer1 = getPeer({ id: 'peer1' });
+        const peer2 = getPeer({ id: 'peer2' });
 
         const stream = await window.Peer.getUserMedia();
 
@@ -315,11 +315,11 @@ test('should open dynamic data channel from accepting peer', async ({ page }) =>
     () =>
       new Promise<void>(async (resolve, reject) => {
         const peer1 = getPeer({
-          name: 'peer1',
+          id: 'peer1',
           enableDataChannels: true,
         });
         const peer2 = getPeer({
-          name: 'peer2',
+          id: 'peer2',
           enableDataChannels: true,
           channelLabel: 'test',
         });
@@ -351,11 +351,11 @@ test('should send data to other peer using default data channels', async ({ page
     () =>
       new Promise<void>(async (resolve, reject) => {
         const peer1 = getPeer({
-          name: 'peer1',
+          id: 'peer1',
           enableDataChannels: true,
         });
         const peer2 = getPeer({
-          name: 'peer2',
+          id: 'peer2',
           enableDataChannels: true,
         });
 
@@ -386,11 +386,11 @@ test('should send data to other peer using dynamic data channels', async ({ page
     () =>
       new Promise<void>(async (resolve, reject) => {
         const peer1 = getPeer({
-          name: 'peer1',
+          id: 'peer1',
           enableDataChannels: true,
         });
         const peer2 = getPeer({
-          name: 'peer2',
+          id: 'peer2',
           enableDataChannels: true,
         });
 
@@ -426,8 +426,8 @@ test('should send data to other peer then close using negotiated data channels',
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve, reject) => {
-        const peer1 = getPeer({ name: 'peer1', enableDataChannels: true });
-        const peer2 = getPeer({ name: 'peer2', enableDataChannels: true });
+        const peer1 = getPeer({ id: 'peer1', enableDataChannels: true });
+        const peer2 = getPeer({ id: 'peer2', enableDataChannels: true });
 
         peer1.addDataChannel('extraMessages', { negotiated: true, id: 0 });
         peer2.addDataChannel('extraMessages', { negotiated: true, id: 0 });

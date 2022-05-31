@@ -33,7 +33,7 @@ export default class Peer {
   private readonly options: Required<PeerOptions> = {
     batchCandidates: true,
     batchCandidatesTimeout: 200,
-    name: 'peer',
+    id: 'peer',
     config: {
       iceServers: [{ urls: ['stun:stun.l.google.com:19302'] }],
     },
@@ -122,7 +122,7 @@ export default class Peer {
           break;
         }
         case 'connected': {
-          console.log(`${this.options.name}.connected()`);
+          console.log(`${this.options.id}.connected()`);
           this.emit('connected');
           break;
         }
@@ -144,12 +144,12 @@ export default class Peer {
         const offer = await this.peer.createOffer(offerOptions);
         if (this.peer.signalingState !== 'stable') return;
 
-        console.log(`${this.options.name}.onnegotiationneeded()`);
+        console.log(`${this.options.id}.onnegotiationneeded()`);
         offer.sdp = offer.sdp && sdpTransform(offer.sdp);
         await this.peer.setLocalDescription(offer);
 
         if (this.peer.localDescription) {
-          console.log(this.options.name, '->', offer.type);
+          console.log(this.options.id, '->', offer.type);
           this.emit('signal', this.peer.localDescription);
         }
       } catch (err) {
@@ -184,7 +184,7 @@ export default class Peer {
         this.init();
       }
 
-      console.log(`${this.options.name}.start()`);
+      console.log(`${this.options.id}.start()`);
 
       this.isActive = true;
       this.polite = polite;
@@ -206,7 +206,7 @@ export default class Peer {
         this.init();
       }
 
-      console.log(this.options.name, '<-', description.type);
+      console.log(this.options.id, '<-', description.type);
 
       this.isActive = true;
       const offerCollision =
@@ -214,7 +214,7 @@ export default class Peer {
 
       this.ignoreOffer = !this.polite && offerCollision;
       if (this.ignoreOffer) {
-        console.log(this.options.name, '- ignoreOffer');
+        console.log(this.options.id, '- ignoreOffer');
         return;
       }
 
@@ -227,7 +227,7 @@ export default class Peer {
         answer.sdp = answer.sdp && this.options.sdpTransform(answer.sdp);
         await this.peer.setLocalDescription(answer);
 
-        console.log(this.options.name, '->', answer.type);
+        console.log(this.options.id, '->', answer.type);
         this.emit('signal', answer);
       }
       this.polite = POLITE_DEFAULT_VALUE;
@@ -242,7 +242,7 @@ export default class Peer {
   /** Add RTCIceCandidate to peer */
   public async addIceCandidate(candidate: RTCIceCandidate) {
     try {
-      console.log(this.options.name, '<-', 'icecandidate');
+      console.log(this.options.id, '<-', 'icecandidate');
       await this.peer.addIceCandidate(candidate);
     } catch (err) {
       if (!this.ignoreOffer && err instanceof Error) {
@@ -335,7 +335,7 @@ export default class Peer {
       this.channels.clear();
       this.channelsPending.clear();
       this.peer.close();
-      console.log(`${this.options.name}.disconnected()`);
+      console.log(`${this.options.id}.disconnected()`);
       this.emit('disconnected');
     }
   }
@@ -366,8 +366,8 @@ export default class Peer {
   }
 
   private error(message: string, error?: Error) {
-    console.error(`${this.options.name}`, message, error ? `- ${error.toString()}` : '');
-    this.emit('error', { name: this.options.name, message, error });
+    console.error(`${this.options.id}`, message, error ? `- ${error.toString()}` : '');
+    this.emit('error', { id: this.options.id, message, error });
   }
 
   // helpers

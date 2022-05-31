@@ -106,8 +106,8 @@ export default function ChatMessages(props: Props) {
     addMessage(data.toString(), clazz);
   });
 
-  usePeer(peer, 'error', ({ name, error }) => {
-    addMessage(`${name} - ${error!.message}`, 'error');
+  usePeer(peer, 'error', ({ id, error }) => {
+    addMessage(`${id} - ${error!.message}`, 'error');
   });
 
   return (

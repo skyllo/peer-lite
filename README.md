@@ -120,8 +120,8 @@ export interface PeerOptions {
   batchCandidates?: boolean;
   /** Timeout in MS before emitting batched ICECandidates */
   batchCandidatesTimeout?: number;
-  /** Peer name used when emitting errors */
-  name?: string;
+  /** Peer id used when emitting errors */
+  id?: string;
   /** RTCPeerConnection options */
   config?: RTCConfiguration;
   /** RTCOfferOptions options */
@@ -140,7 +140,7 @@ export interface PeerOptions {
 ### Peer Events
 ```typescript
 export interface PeerEvents {
-  error: (data: { name: string; message: string; error?: Error }) => void;
+  error: (data: { id: string; message: string; error?: Error }) => void;
   // Connection Status
   connecting: VoidFunction;
   connected: VoidFunction;

@@ -33,7 +33,7 @@ export default class Peer {
   private readonly options: Required<PeerOptions> = {
     batchCandidates: true,
     batchCandidatesTimeout: 200,
-    id: 'peer',
+    id: randomHex(4),
     config: {
       iceServers: [{ urls: ['stun:stun.l.google.com:19302'] }],
     },

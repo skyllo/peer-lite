@@ -402,11 +402,6 @@ export default class Peer {
     }
   }
 
-  /** Remove tracks on peer */
-  public removeTracks(tracks: MediaStreamTrack[]) {
-    tracks.forEach((track) => this.removeTrack(track));
-  }
-
   /** Remove track on peer */
   public removeTrack(track: MediaStreamTrack) {
     removeTracks(this.streamLocal, filterByTrack(track));
@@ -414,6 +409,11 @@ export default class Peer {
       // remove tracks from peer connection
       removeTracksFromPeer(this.peer, filterByTrack(track));
     }
+  }
+
+  /** Remove tracks on peer */
+  public removeTracks(tracks: MediaStreamTrack[]) {
+    tracks.forEach((track) => this.removeTrack(track));
   }
 
   /** Replace track with another track on peer */

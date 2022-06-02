@@ -310,6 +310,23 @@ test('should connect two peers that make an offer simultaneously when one is pol
   );
 });
 
+test('should connect peers when only data channels are enabled', async ({ page }) => {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        const peer1 = getPeer({ id: 'peer1', enableDataChannels: true });
+        const peer2 = getPeer({ id: 'peer2', enableDataChannels: true });
+
+        peer1.on('connected', () => {
+          resolve();
+        });
+
+        setupPeers(peer1, peer2);
+        peer1.start();
+      })
+  );
+});
+
 test('should open dynamic data channel from accepting peer', async ({ page }) => {
   await page.evaluate(
     () =>

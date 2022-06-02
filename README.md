@@ -112,10 +112,9 @@ See more examples [here](example) with signalling server.
 ## Constructor
 `new Peer(Options)`
 
-### Peer Options
-
+## Peer Options
 ```typescript
-export interface PeerOptions {
+interface PeerOptions {
   /** Enable support for batching ICECandidates */
   batchCandidates?: boolean;
   /** Timeout in MS before emitting batched ICECandidates */
@@ -137,9 +136,60 @@ export interface PeerOptions {
 }
 ```
 
-### Peer Events
+## Peer API
 ```typescript
-export interface PeerEvents {
+interface Peer {
+  /** Create a peer instance */
+  constructor(options?: PeerOptions);
+  /** Initialize the peer */
+  init(): RTCPeerConnection;
+  /** Start the RTCPeerConnection signalling */
+  start({ polite }?: {
+      polite?: boolean | undefined;
+  }): void;
+  /** Process a RTCSessionDescriptionInit on peer */
+  signal(description: RTCSessionDescriptionInit): Promise<void>;
+  /** Add RTCIceCandidate to peer */
+  addIceCandidate(candidate: RTCIceCandidate): Promise<void>;
+  /** Send data to connected peer using an RTCDataChannel */
+  send(data: string | Blob | ArrayBuffer | ArrayBufferView, label?: string): boolean;
+  /** Add RTCDataChannel to peer */
+  addDataChannel(label?: string, options?: RTCDataChannelInit): void;
+  /** Get RTCDataChannel added to peer */
+  getDataChannel(label?: string): RTCDataChannel | undefined;
+  /** Close peer if active */
+  destroy(): void;
+  /** Return the ICEConnectionState of the peer */
+  status(): RTCIceConnectionState;
+  /** Return true if the peer is connected */
+  isConnected(): boolean;
+  /** Return true if the peer is closed */
+  isClosed(): boolean;
+  /** Return the RTCPeerConnection */
+  get(): RTCPeerConnection;
+  /** Return the local stream */
+  getStreamLocal(): MediaStream;
+  /** Add stream to peer */
+  addStream(stream: MediaStream, replace?: boolean): void;
+  /** Remove stream from peer */
+  removeStream(stream: MediaStream): void;
+  /** Add track to peer */
+  addTrack(track: MediaStreamTrack): void;
+  /** Remove track on peer */
+  removeTrack(track: MediaStreamTrack): void;
+  /** Remove tracks on peer */
+  removeTracks(tracks: MediaStreamTrack[]): void;
+  /** Replace track with another track on peer */
+  replaceTrack(track: MediaStreamTrack, newTrack: MediaStreamTrack): Promise<void>;
+  on<E extends keyof PeerEvents>(event: E, listener: PeerEvents[E]): TypedEmitter<PeerEvents>;
+  off<E extends keyof PeerEvents>(event: E, listener: PeerEvents[E]): TypedEmitter<PeerEvents>;
+  offAll<E extends keyof PeerEvents>(event?: E): TypedEmitter<PeerEvents>;
+}
+```
+
+## Peer Events
+```typescript
+interface PeerEvents {
   error: (data: { id: string; message: string; error?: Error }) => void;
   // Connection Status
   connecting: VoidFunction;
@@ -169,12 +219,12 @@ The tests run inside a headless Chrome and Firefox with [Playwright](https://pla
 and [@playwright/test](https://www.npmjs.com/package/@playwright/test).
 These run quickly and allow testing of WebRTC APIs in real browsers.
 
-Run Tests (Chrome only)
+**Run Tests (Chrome only)**
 ```bash
 yarn test
 ```
 
-Run Tests (Chrome + Firefox)
+**Run Tests (Chrome + Firefox)**
 ```bash
 CI=true yarn test
 ```

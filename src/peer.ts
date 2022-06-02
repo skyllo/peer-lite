@@ -442,12 +442,16 @@ export default class Peer {
 
   // emitter
 
-  public on<E extends keyof PeerEvents>(event: E, cb: PeerEvents[E]) {
-    return this.emitter.on(event, cb);
+  public on<E extends keyof PeerEvents>(event: E, listener: PeerEvents[E]) {
+    return this.emitter.on(event, listener);
   }
 
-  public off<E extends keyof PeerEvents>(event: E, cb: PeerEvents[E]) {
-    return this.emitter.off(event, cb);
+  public off<E extends keyof PeerEvents>(event: E, listener: PeerEvents[E]) {
+    return this.emitter.off(event, listener);
+  }
+
+  public offAll<E extends keyof PeerEvents>(event?: E) {
+    return this.emitter.offAll(event);
   }
 
   private emit<E extends keyof PeerEvents>(event: E, ...args: Arguments<PeerEvents[E]>) {

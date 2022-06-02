@@ -4,6 +4,7 @@ module.exports = {
   plugins: [
     '@typescript-eslint',
     'prettier',
+    'jest'
   ],
   env: {
     browser: true,

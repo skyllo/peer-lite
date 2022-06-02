@@ -9,6 +9,7 @@ export type FilterTracksFunc = (track: MediaStreamTrack) => boolean;
 export interface TypedEmitter<Events> {
   on<E extends keyof Events>(event: E, listener: Events[E]): this;
   off<E extends keyof Events>(event: E, listener: Events[E]): this;
+  offAll<E extends keyof Events>(event?: E): this;
   emit<E extends keyof Events>(event: E, ...args: Arguments<Events[E]>): boolean;
 }
 

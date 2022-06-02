@@ -27,6 +27,7 @@ const rollupConfig: RollupOptions = {
       typescript,
       tsconfig: './tsconfig.json',
       include: ['./src/**.*'],
+      emitDeclarationOnly: true,
     }),
     swc({
       sourceMaps: true,

@@ -160,7 +160,6 @@ export default class Peer {
   /** Start the RTCPeerConnection signalling */
   public start({ polite = POLITE_DEFAULT_VALUE } = {}) {
     try {
-      // reset peer if only local offer is set
       if (this.peer.signalingState === 'have-local-offer') {
         this.destroy();
       }
@@ -175,7 +174,7 @@ export default class Peer {
 
       // ⚡ triggers "negotiationneeded" event
       this.syncStreams();
-      // create data channel to add "m=application" to SDP
+      // ⚡ triggers "negotiationneeded" event
       this.syncChannels();
     } catch (err) {
       if (err instanceof Error) {
@@ -208,7 +207,7 @@ export default class Peer {
       if (description.type === 'offer') {
         // ⚡ triggers "negotiationneeded" event
         this.syncStreams();
-        // create data channel to add "m=application" to SDP
+        // ⚡ triggers "negotiationneeded" event
         this.syncChannels();
 
         const answer = await this.peer.createAnswer();
@@ -283,7 +282,7 @@ export default class Peer {
   private createDataChannels() {
     try {
       Array.from(this.channelsPending.entries()).forEach(([label, options]) => {
-        // ⚡ triggers "negotiationneeded" event if connected and no other data channels already added
+        // ⚡ triggers "negotiationneeded" event if no other data channels already added
         const channel = this.peer.createDataChannel(label, options);
         this.channels.set(label, channel);
         this.addDataChannelEvents(channel);
@@ -298,7 +297,6 @@ export default class Peer {
   }
 
   private addDataChannelEvents(channel: RTCDataChannel) {
-    // setup data channel events
     channel.onopen = () => this.emit('channelOpen', { channel });
     channel.onerror = (ev: Event) => {
       const event = ev as RTCErrorEvent;
@@ -410,9 +408,9 @@ export default class Peer {
   public removeTrack(track: MediaStreamTrack) {
     removeTrack(this.streamLocal, track);
     if (this.isActive) {
-      // remove tracks from peer connection
       const sender = getSenderForTrack(this.peer, track);
       if (sender) {
+        // ⚡ triggers "negotiationneeded" event
         this.peer.removeTrack(sender);
       }
     }

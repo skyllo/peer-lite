@@ -1,5 +1,3 @@
-import { FilterTracksFunc } from './types';
-
 export function getDefaultCamConstraints(): MediaStreamConstraints {
   const audio = true;
   const videoObj: MediaTrackConstraints = {};
@@ -18,23 +16,16 @@ export function randomHex(n: number) {
     .join('');
 }
 
-export function filterByTrack(track: MediaStreamTrack): FilterTracksFunc {
-  return (existingTrack) => existingTrack === track;
+export function getSenderForTrack(peer: RTCPeerConnection, track: MediaStreamTrack) {
+  return peer.getSenders().filter((sender) => sender.track === track)[0];
 }
 
-export function removeTracks(stream: MediaStream, filterFunc: FilterTracksFunc) {
+export function removeTrack(stream: MediaStream, trackToRemove: MediaStreamTrack) {
   stream
     .getTracks()
-    .filter(filterFunc)
+    .filter((track) => track === trackToRemove)
     .forEach((track) => {
       track.stop();
       stream.removeTrack(track);
     });
-}
-
-export function removeTracksFromPeer(peer: RTCPeerConnection, filterFunc: FilterTracksFunc) {
-  peer
-    .getSenders()
-    .filter((sender) => sender.track && filterFunc(sender.track))
-    .forEach((sender) => peer.removeTrack(sender));
 }

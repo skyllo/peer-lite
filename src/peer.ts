@@ -1,13 +1,7 @@
 /* eslint-disable no-param-reassign */
 import { EventEmitter } from './emitter';
 import { Arguments, PeerEvents, PeerOptions, TypedEmitter } from './types';
-import {
-  filterByTrack,
-  getDefaultCamConstraints,
-  randomHex,
-  removeTracks,
-  removeTracksFromPeer,
-} from './utils';
+import { getDefaultCamConstraints, getSenderForTrack, randomHex, removeTrack } from './utils';
 
 const POLITE_DEFAULT_VALUE = true;
 
@@ -60,13 +54,6 @@ export default class Peer {
     this.destroy();
     // create peer connection
     this.peer = new RTCPeerConnection(this.options.config);
-    // ⚡ triggers "negotiationneeded" event if connected
-    this.streamLocal.getTracks().forEach((track) => this.peer.addTrack(track, this.streamLocal));
-    // create data channel to add "m=application" to SDP
-    const { channelLabel, channelOptions, enableDataChannels } = this.options;
-    if (enableDataChannels) {
-      this.addDataChannel(channelLabel, channelOptions);
-    }
     // setup peer connection events
     const candidates: RTCIceCandidate[] = [];
     let candidatesId: ReturnType<typeof window.setTimeout>;
@@ -138,9 +125,6 @@ export default class Peer {
         this.makingOffer = true;
 
         const { offerOptions, sdpTransform } = this.options;
-        // add pending data channels
-        this.createDataChannels();
-
         const offer = await this.peer.createOffer(offerOptions);
         if (this.peer.signalingState !== 'stable') return;
 
@@ -190,7 +174,9 @@ export default class Peer {
       this.polite = polite;
 
       // ⚡ triggers "negotiationneeded" event
-      this.peer.restartIce();
+      this.syncStreams();
+      // create data channel to add "m=application" to SDP
+      this.syncChannels();
     } catch (err) {
       if (err instanceof Error) {
         this.error('Failed to start', err);
@@ -220,8 +206,10 @@ export default class Peer {
 
       await this.peer.setRemoteDescription(description);
       if (description.type === 'offer') {
-        // add pending data channels
-        this.createDataChannels();
+        // ⚡ triggers "negotiationneeded" event
+        this.syncStreams();
+        // create data channel to add "m=application" to SDP
+        this.syncChannels();
 
         const answer = await this.peer.createAnswer();
         answer.sdp = answer.sdp && this.options.sdpTransform(answer.sdp);
@@ -370,6 +358,22 @@ export default class Peer {
     this.emit('error', { id: this.options.id, message, error });
   }
 
+  private syncStreams() {
+    this.streamLocal.getTracks().forEach((track) => {
+      const sender = getSenderForTrack(this.peer, track);
+      if (!sender) {
+        this.peer.addTrack(track, this.streamLocal);
+      }
+    });
+  }
+
+  private syncChannels() {
+    const { channelLabel, channelOptions, enableDataChannels } = this.options;
+    if (enableDataChannels) {
+      this.addDataChannel(channelLabel, channelOptions);
+    }
+  }
+
   // helpers
 
   /** Add stream to peer */
@@ -390,8 +394,8 @@ export default class Peer {
     try {
       this.streamLocal.addTrack(track);
       this.emit('streamLocal', this.streamLocal);
-      if (!this.isClosed()) {
-        // ⚡ triggers "negotiationneeded" event if connected
+      if (this.isActive) {
+        // ⚡ triggers "negotiationneeded" event
         this.peer.addTrack(track, this.streamLocal);
       }
     } catch (err) {
@@ -404,10 +408,13 @@ export default class Peer {
 
   /** Remove track on peer */
   public removeTrack(track: MediaStreamTrack) {
-    removeTracks(this.streamLocal, filterByTrack(track));
-    if (!this.isClosed()) {
+    removeTrack(this.streamLocal, track);
+    if (this.isActive) {
       // remove tracks from peer connection
-      removeTracksFromPeer(this.peer, filterByTrack(track));
+      const sender = getSenderForTrack(this.peer, track);
+      if (sender) {
+        this.peer.removeTrack(sender);
+      }
     }
   }
 
@@ -419,11 +426,11 @@ export default class Peer {
   /** Replace track with another track on peer */
   public async replaceTrack(track: MediaStreamTrack, newTrack: MediaStreamTrack) {
     try {
-      if (!this.isClosed()) {
-        const [sender] = this.peer.getSenders().filter((_sender) => _sender.track === track);
+      if (this.isActive) {
+        const sender = getSenderForTrack(this.peer, track);
         if (sender) {
           // remove/add track on local stream
-          removeTracks(this.streamLocal, filterByTrack(track));
+          removeTrack(this.streamLocal, track);
           this.streamLocal.addTrack(newTrack);
           // replace track on peer connection - will error if renegotiation needed
           await sender.replaceTrack(newTrack);

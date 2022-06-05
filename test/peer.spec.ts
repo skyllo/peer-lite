@@ -154,7 +154,7 @@ test('should emit both peers remote streams', async ({ page }) => {
         });
 
         setupPeers(peer1, peer2, stream);
-        peer1.start();
+        setTimeout(() => peer1.start(), 1000);
       })
   );
 });

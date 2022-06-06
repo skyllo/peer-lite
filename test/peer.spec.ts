@@ -71,7 +71,7 @@ test('should set the local stream and be active', async ({ page }) => {
   expect(isStreamLocalActive).toEqual(true);
 });
 
-test('should start peer if called twice afters listeners added', async ({ page }) => {
+test('should start peer if called afters listeners and stream added', async ({ page }) => {
   await page.evaluate(
     () =>
       new Promise<void>(async (resolve) => {
@@ -79,7 +79,6 @@ test('should start peer if called twice afters listeners added', async ({ page }
         const peer2 = getPeer({ id: 'peer2' });
 
         peer1.start();
-        peer2.start({ polite: false });
 
         const stream = await window.Peer.getUserMedia();
 
@@ -88,8 +87,6 @@ test('should start peer if called twice afters listeners added', async ({ page }
         });
 
         setupPeers(peer1, peer2, stream);
-        peer1.start();
-        peer2.start({ polite: false });
       })
   );
 });

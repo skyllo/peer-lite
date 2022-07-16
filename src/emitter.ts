@@ -20,7 +20,7 @@ export class EventEmitter {
 
   public off(event: string, listener: ListenerFunction) {
     const listeners = this.eventMap[event] ?? [];
-    for (let i = listeners.length; i > 0; i -= 1) {
+    for (let i = listeners.length - 1; i >= 0; i -= 1) {
       if (listeners[i] === listener) {
         listeners.splice(i, 1);
         break;

@@ -39,3 +39,14 @@ test('emitter can remove multiple listeners', () => {
   emitter.emit('eventName');
   expect(spyFunc).toBeCalledTimes(0);
 });
+
+test('emitter can remove single listener', () => {
+  const spyFunc = jest.fn();
+  const emitter = new EventEmitter();
+  emitter.on('eventName', spyFunc);
+  emitter.off('eventName', spyFunc);
+  emitter.emit('eventName');
+  expect(spyFunc).toBeCalledTimes(0);
+
+  spyFunc.mockClear();
+});

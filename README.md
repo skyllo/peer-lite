@@ -1,6 +1,7 @@
 # PeerLite
 
 [![CircleCI](https://circleci.com/gh/skyllo/peer-lite.svg?style=svg&circle-token=cd1df6b2a763871eb9c52ec816a40e0ba0e9beeb)](https://circleci.com/gh/skyllo/peer-lite)
+[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
 Lightweight WebRTC browser library that supports video, audio and data channels.
 
